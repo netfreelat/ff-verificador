@@ -1,6 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- CONFIGURACIÓN DE PRECIOS ---
+    const DOLAR_RATE = 45.50; // CAMBIA ESTE NÚMERO PARA ACTUALIZAR PRECIOS EN BS
+    // --------------------------------
+
     const verifyBtn = document.getElementById('verify-btn');
     const playerInput = document.getElementById('player-id');
+
+    // Inicializar Precios
+    const updatePrices = () => {
+        const rateDisplay = document.getElementById('current-rate');
+        if (rateDisplay) rateDisplay.innerText = DOLAR_RATE.toFixed(2);
+        document.querySelectorAll('.package-card').forEach(card => {
+            const usdt = parseFloat(card.dataset.price);
+            const bs = (usdt * DOLAR_RATE).toFixed(2);
+            const priceBsEl = card.querySelector('.price-bs');
+            if (priceBsEl) priceBsEl.innerText = `${bs} Bs`;
+        });
+    };
+    updatePrices();
 
     // Permitir verificar presionando Enter
     playerInput.addEventListener('keydown', (e) => {
@@ -124,6 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const ref = selectedMethod === 'pagomovil' ? refPagoMovil.value : refBinance.value;
         const name = verifyBtn.innerText.trim();
         const packText = `${selectedPackage.amount} + ${selectedPackage.bonus}`;
+        const priceUSDT = parseFloat(document.querySelector('.package-card.selected').dataset.price);
+        const priceBS = (priceUSDT * DOLAR_RATE).toFixed(2);
 
         Swal.fire({
             title: 'Enviando comprobante...',
@@ -133,8 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         try {
-            // Llamar al servidor para enviar la notificación por Telegram
-            const notifyUrl = `https://ff-verificador.onrender.com/notificar?uid=${playerInput.value}&name=${encodeURIComponent(name)}&pack=${encodeURIComponent(packText)}&method=${selectedMethod}&ref=${encodeURIComponent(ref)}`;
+            const messageParams = `uid=${playerInput.value}&name=${encodeURIComponent(name)}&pack=${encodeURIComponent(packText)}&method=${selectedMethod}&ref=${encodeURIComponent(ref)}&price=${priceUSDT}USDT/${priceBS}Bs`;
+            const notifyUrl = `https://ff-verificador.onrender.com/notificar?${messageParams}`;
             
             await fetch(notifyUrl);
 
@@ -146,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="text-align: left; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
                         <p><strong>ID:</strong> ${playerInput.value}</p>
                         <p><strong>Paquete:</strong> ${packText} diamantes</p>
+                        <p><strong>Total:</strong> ${priceUSDT} USDT (${priceBS} Bs)</p>
                         <p><strong>Referencia:</strong> ${ref}</p>
                     </div>
                     <p style="margin-top: 15px; font-size: 0.9rem; color: #888;">Recibirás tus diamantes en máximo 15 minutos.</p>

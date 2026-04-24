@@ -243,6 +243,40 @@ body::before {
     margin-top: 5px;
 }
 
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 25px 0 15px;
+}
+
+.rate-badge {
+    background: rgba(76, 201, 240, 0.1);
+    border: 1px solid rgba(76, 201, 240, 0.3);
+    color: #4CC9F0;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.price-usdt {
+    font-size: 0.9rem;
+    color: #F7B500;
+    font-weight: 700;
+    margin-top: 5px;
+}
+
+.price-bs {
+    font-size: 0.8rem;
+    color: var(--text-gray);
+    margin-top: 2px;
+}
+
+.package-card.selected .price-bs {
+    color: rgba(255, 255, 255, 0.7);
+}
+
 .buy-btn:disabled {
     background: #333;
     cursor: not-allowed;

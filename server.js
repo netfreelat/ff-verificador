@@ -105,6 +105,7 @@ const server = http.createServer((req, res) => {
         const pack = parsedUrl.searchParams.get('pack');
         const method = parsedUrl.searchParams.get('method');
         const ref = parsedUrl.searchParams.get('ref');
+        const price = parsedUrl.searchParams.get('price') || 'N/A';
 
         // --- CONFIGURACIÓN DE TELEGRAM ---
         const BOT_TOKEN = '8289162386:AAHLCDRF1OVerD95szOdWCDfQViH4CT_FGY'; 
@@ -117,7 +118,8 @@ const server = http.createServer((req, res) => {
 👤 *Jugador:* ${name}
 🆔 *ID:* ${uid}
 💎 *Paquete:* ${pack}
-💰 *Método:* ${method === 'pagomovil' ? 'Pago Móvil' : 'Binance Pay'}
+💰 *Total:* ${price}
+💳 *Método:* ${method === 'pagomovil' ? 'Pago Móvil' : 'Binance Pay'}
 📝 *Referencia:* \`${ref}\`
 -------------------------------
 ⏰ _Verifica el pago y recarga pronto._
