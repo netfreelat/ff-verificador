@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- CONFIGURACIÓN DE PRECIOS ---
-    const DOLAR_RATE = 45.50; // CAMBIA ESTE NÚMERO PARA ACTUALIZAR PRECIOS EN BS
+    const DOLAR_RATE = 635.00; // CAMBIA ESTE NÚMERO PARA ACTUALIZAR PRECIOS EN BS
     // --------------------------------
 
     const verifyBtn = document.getElementById('verify-btn');
