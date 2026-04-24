@@ -107,8 +107,8 @@ const server = http.createServer((req, res) => {
         const ref = parsedUrl.searchParams.get('ref');
 
         // --- CONFIGURACIÓN DE TELEGRAM ---
-        const BOT_TOKEN = 'TU_BOT_TOKEN_AQUI'; // Reemplazar con el token de @BotFather
-        const CHAT_ID = 'TU_CHAT_ID_AQUI';     // Reemplazar con tu ID de chat
+        const BOT_TOKEN = '8289162386:AAHLCDRF1OVerD95szOdWCDfQViH4CT_FGY'; 
+        const CHAT_ID = '908668962';     
         // ---------------------------------
 
         const message = `
