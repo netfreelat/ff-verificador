@@ -1,3 +1,4 @@
+require('dotenv').config();
 const http = require('http');
 const https = require('https');
 
@@ -108,8 +109,8 @@ const server = http.createServer((req, res) => {
         const price = parsedUrl.searchParams.get('price') || 'N/A';
 
         // --- CONFIGURACIÓN DE TELEGRAM ---
-        const BOT_TOKEN = '8289162386:AAHLCDRF1OVerD95szOdWCDfQViH4CT_FGY'; 
-        const CHAT_ID = '908668962';     
+        const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN; 
+        const CHAT_ID = process.env.TELEGRAM_CHAT_ID;     
         // ---------------------------------
 
         const message = `
@@ -125,20 +126,47 @@ const server = http.createServer((req, res) => {
 ⏰ _Verifica el pago y recarga pronto._
         `;
 
-        const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}&parse_mode=Markdown`;
+        const payload = JSON.stringify({
+            chat_id: CHAT_ID,
+            text: message,
+            parse_mode: 'Markdown',
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        { text: "✅ ACEPTAR", callback_data: `action_accept_${uid}` },
+                        { text: "❌ RECHAZAR", callback_data: `action_reject_${uid}` }
+                    ]
+                ]
+            }
+        });
 
-        https.get(telegramUrl, (apiRes) => {
+        const options = {
+            hostname: 'api.telegram.org',
+            path: `/bot${BOT_TOKEN}/sendMessage`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(payload)
+            }
+        };
+
+        const tgReq = https.request(options, (apiRes) => {
             let body = '';
             apiRes.on('data', chunk => body += chunk);
             apiRes.on('end', () => {
                 res.writeHead(200);
                 res.end(JSON.stringify({ success: true, info: 'Notificación enviada' }));
             });
-        }).on('error', (e) => {
+        });
+        
+        tgReq.on('error', (e) => {
             console.error('Error enviando a Telegram:', e.message);
             res.writeHead(500);
             res.end(JSON.stringify({ error: 'Error al enviar notificación' }));
         });
+
+        tgReq.write(payload);
+        tgReq.end();
 
     } else if (parsedUrl.pathname === '/health') {
         res.writeHead(200);

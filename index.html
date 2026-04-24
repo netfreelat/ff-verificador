@@ -19,6 +19,16 @@
 
 <body>
 
+    <!-- ========================================== -->
+    <!-- BARRA INFORMATIVA (Puedes editar el texto) -->
+    <!-- ========================================== -->
+    <div class="top-banner">
+        <div class="marquee">
+            <i class="fa-solid fa-bullhorn"></i>
+            <span>¡PROMOCIÓN ESPECIAL! bienvenidos a recargas free fire .</span>
+        </div>
+    </div>
+
     <div class="main-container">
         <div class="card">
             <div class="logo-container">
@@ -34,13 +44,20 @@
                 <i class="fa-solid fa-magnifying-glass"></i> Consultar ID
             </button>
 
+            <!-- Welcome Section (Hidden by default) -->
+            <div id="welcome-section" class="welcome-container" style="display: none;">
+                <div class="welcome-icon"><i class="fa-solid fa-gamepad"></i></div>
+                <p>¡Bienvenido!</p>
+                <h2 id="player-name-display">Nombre del Jugador</h2>
+            </div>
+
             <!-- Diamond Packages Section (Hidden by default) -->
             <div id="packages-section" class="packages-container" style="display: none;">
                 <div class="section-header">
                     <h2 class="section-title">Selecciona tus Diamantes</h2>
                     <div class="rate-badge">Tasa: <span id="current-rate">0.00</span> Bs</div>
                 </div>
-                
+
                 <div class="packages-grid">
                     <div class="package-card" data-amount="100" data-bonus="10" data-price="0.98">
                         <div class="diamond-icon"><i class="fa-solid fa-gem"></i></div>

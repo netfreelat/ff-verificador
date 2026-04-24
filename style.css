@@ -6,13 +6,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Inter:wght@300;400;600&display=swap');
 
 :root {
-    --primary: #FF5A5F;
-    --primary-hover: #E14E53;
-    --bg-dark: #0A0A0C;
-    --card-bg: rgba(255, 255, 255, 0.05);
+    --primary: #9D00FF;
+    --primary-hover: #B533FF;
+    --secondary: #00F0FF;
+    --bg-dark: #0A0514;
+    --card-bg: rgba(20, 10, 35, 0.65);
     --text-white: #FFFFFF;
     --text-gray: #B0B0B0;
-    --glow: 0 0 20px rgba(255, 90, 95, 0.4);
+    --glow: 0 0 20px rgba(157, 0, 255, 0.5);
     --border-radius: 16px;
     --transition: all 0.3s ease;
 }
@@ -32,7 +33,7 @@ body {
     align-items: center;
     justify-content: center;
     overflow-x: hidden;
-    background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a0c 100%);
+    background: radial-gradient(circle at center, #1b0a3a 0%, #0A0514 100%);
 }
 
 /* Background Elements */
@@ -43,9 +44,52 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background: url('https://wallpaperaccess.com/full/1528652.jpg') no-repeat center center/cover;
-    opacity: 0.2;
+    background: url('fondo.jpg') no-repeat center center/cover;
+    opacity: 0.35;
     z-index: -1;
+}
+
+/* Top Banner */
+.top-banner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(90deg, rgba(157, 0, 255, 0.7), rgba(0, 240, 255, 0.7));
+    backdrop-filter: blur(10px);
+    color: #FFF;
+    padding: 12px 0;
+    font-size: 0.95rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    letter-spacing: 1px;
+    z-index: 100;
+    box-shadow: 0 4px 15px rgba(0, 240, 255, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.marquee {
+    display: inline-block;
+    padding-left: 100%;
+    animation: marquee 50s linear infinite;
+}
+
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+.top-banner i {
+    margin-right: 8px;
+    color: #FFF;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8));
 }
 
 .main-container {
@@ -56,8 +100,15 @@ body::before {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .card {
@@ -79,7 +130,7 @@ body::before {
     font-weight: 800;
     font-size: 2.2rem;
     letter-spacing: -1px;
-    background: linear-gradient(to right, #ffffff, #ff5a5f);
+    background: linear-gradient(to right, var(--secondary), var(--primary));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 10px;
@@ -129,13 +180,13 @@ body::before {
     transition: var(--transition);
     text-transform: uppercase;
     letter-spacing: 1px;
-    box-shadow: 0 4px 15px rgba(255, 90, 95, 0.3);
+    box-shadow: 0 4px 15px rgba(157, 0, 255, 0.3);
 }
 
 .btn-primary:hover {
     background: var(--primary-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 90, 95, 0.4);
+    box-shadow: 0 6px 20px rgba(157, 0, 255, 0.4);
 }
 
 .btn-primary:active {
@@ -152,6 +203,40 @@ body::before {
     color: var(--primary);
     text-decoration: none;
     font-weight: 600;
+}
+
+.welcome-container {
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 25px;
+    animation: fadeIn 0.5s ease-out;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+}
+
+.welcome-icon {
+    font-size: 2.2rem;
+    color: var(--secondary);
+    margin-bottom: 5px;
+    filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
+}
+
+.welcome-container p {
+    color: var(--text-gray);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.welcome-container h2 {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--text-white);
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
 }
 
 /* Dashboard Styles */
@@ -195,15 +280,15 @@ body::before {
 }
 
 .package-card:hover {
-    background: rgba(255, 90, 95, 0.05);
-    border-color: rgba(255, 90, 95, 0.3);
+    background: rgba(157, 0, 255, 0.1);
+    border-color: rgba(157, 0, 255, 0.4);
     transform: scale(1.02);
 }
 
 .package-card.selected {
-    background: rgba(255, 90, 95, 0.1);
+    background: rgba(157, 0, 255, 0.15);
     border-color: var(--primary);
-    box-shadow: 0 0 15px rgba(255, 90, 95, 0.2);
+    box-shadow: 0 0 20px rgba(157, 0, 255, 0.3);
 }
 
 .package-card.selected::after {
@@ -219,9 +304,9 @@ body::before {
 
 .diamond-icon {
     font-size: 2.5rem;
-    color: #4CC9F0;
+    color: var(--secondary);
     margin-bottom: 15px;
-    filter: drop-shadow(0 0 10px rgba(76, 201, 240, 0.4));
+    filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
 }
 
 .pack-info {
@@ -251,9 +336,9 @@ body::before {
 }
 
 .rate-badge {
-    background: rgba(76, 201, 240, 0.1);
-    border: 1px solid rgba(76, 201, 240, 0.3);
-    color: #4CC9F0;
+    background: rgba(0, 240, 255, 0.1);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    color: var(--secondary);
     padding: 5px 12px;
     border-radius: 20px;
     font-size: 0.85rem;
@@ -315,7 +400,7 @@ body::before {
 
 .payment-method-card.selected {
     border-color: var(--primary);
-    background: rgba(255, 90, 95, 0.08);
+    background: rgba(157, 0, 255, 0.15);
 }
 
 .payment-method-card.selected i {

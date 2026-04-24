@@ -49,12 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('packages-section').style.display = 'block';
                 document.querySelector('.main-container').classList.add('expanded');
                 
-                // Cambiar el diseño del input (deshabilitarlo y mostrar nombre)
-                playerInput.disabled = true;
-                verifyBtn.innerHTML = `<i class="fa-solid fa-user-check"></i> ${playerName}`;
-                verifyBtn.classList.remove('btn-primary');
-                verifyBtn.style.background = '#4CAF50';
-                verifyBtn.style.cursor = 'default';
+                // Ocultar input y boton, mostrar bienvenida
+                document.querySelector('.input-group').style.display = 'none';
+                verifyBtn.style.display = 'none';
+                
+                const welcomeSection = document.getElementById('welcome-section');
+                document.getElementById('player-name-display').innerText = playerName;
+                welcomeSection.style.display = 'block';
                 
             } else {
                 throw new Error('Jugador no encontrado');
@@ -139,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     finishBtn.addEventListener('click', async () => {
         const ref = selectedMethod === 'pagomovil' ? refPagoMovil.value : refBinance.value;
-        const name = verifyBtn.innerText.trim();
+        const name = document.getElementById('player-name-display').innerText.trim();
         const packText = `${selectedPackage.amount} + ${selectedPackage.bonus}`;
         const priceUSDT = parseFloat(document.querySelector('.package-card.selected').dataset.price);
         const priceBS = (priceUSDT * DOLAR_RATE).toFixed(2);
