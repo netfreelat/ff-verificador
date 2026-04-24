@@ -55,7 +55,6 @@
             <div id="packages-section" class="packages-container" style="display: none;">
                 <div class="section-header">
                     <h2 class="section-title">Selecciona tus Diamantes</h2>
-                    <div class="rate-badge">Tasa: <span id="current-rate">0.00</span> Bs</div>
                 </div>
 
                 <div class="packages-grid">
@@ -134,6 +133,11 @@
                         <p><strong>Banco:</strong> Banplus (0174)</p>
                         <p><strong>Teléfono:</strong> 0424-3790757</p>
                         <p><strong>Cédula/RIF:</strong> V-17716286</p>
+                        <button class="btn-copy" onclick="copyData('pagomovil')"><i class="fa-solid fa-copy"></i> Copiar Datos de Pago</button>
+                    </div>
+                    <div class="input-group" style="margin-top: 15px;">
+                        <label for="amount-pagomovil" style="font-size: 0.85rem; color: var(--text-gray); margin-bottom: 5px; display: block; text-align: left; padding-left: 10px;">Monto exacto a transferir:</label>
+                        <input type="text" id="amount-pagomovil" placeholder="Monto Transferido (Bs)" readonly style="background: rgba(0, 240, 255, 0.05); border-color: rgba(0, 240, 255, 0.3); color: var(--secondary); font-size: 1.3rem;">
                     </div>
                     <div class="input-group" style="margin-top: 15px;">
                         <input type="text" id="ref-pagomovil" placeholder="Número de Referencia (4-6 dígitos)">
@@ -145,6 +149,11 @@
                     <div class="info-box">
                         <p><strong>Binance ID:</strong> 198080894</p>
                         <p><strong>Nombre:</strong> Recargas free fire</p>
+                        <button class="btn-copy" onclick="copyData('binance')"><i class="fa-solid fa-copy"></i> Copiar Binance ID</button>
+                    </div>
+                    <div class="input-group" style="margin-top: 15px;">
+                        <label for="amount-binance" style="font-size: 0.85rem; color: var(--text-gray); margin-bottom: 5px; display: block; text-align: left; padding-left: 10px;">Monto exacto a enviar:</label>
+                        <input type="text" id="amount-binance" placeholder="Monto Enviado (USDT)" readonly style="background: rgba(0, 240, 255, 0.05); border-color: rgba(0, 240, 255, 0.3); color: var(--secondary); font-size: 1.3rem;">
                     </div>
                     <div class="input-group" style="margin-top: 15px;">
                         <input type="text" id="ref-binance" placeholder="ID de Transacción Binance">

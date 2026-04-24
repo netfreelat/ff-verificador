@@ -34,9 +34,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         Swal.fire({
             title: 'Validando ID...',
-            html: 'Consultando servidores...',
+            html: `
+                <div class="ff-loader-container">
+                    <div class="ff-loader-text">Conectando con servidores de Garena...</div>
+                    <div class="ff-progress-bar">
+                        <div class="ff-progress-fill"></div>
+                    </div>
+                </div>
+            `,
             allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
+            showConfirmButton: false,
+            background: 'rgba(20, 10, 35, 0.95)',
+            color: '#fff'
         });
 
         try {
@@ -112,6 +121,16 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('details-pagomovil').style.display = selectedMethod === 'pagomovil' ? 'block' : 'none';
             document.getElementById('details-binance').style.display = selectedMethod === 'binance' ? 'block' : 'none';
             
+            // Llenar montos automáticamente
+            const priceUSDT = parseFloat(document.querySelector('.package-card.selected').dataset.price);
+            const priceBS = (priceUSDT * DOLAR_RATE).toFixed(2);
+            
+            if(selectedMethod === 'pagomovil') {
+                document.getElementById('amount-pagomovil').value = `${priceBS} Bs`;
+            } else {
+                document.getElementById('amount-binance').value = `${priceUSDT} USDT`;
+            }
+
             checkFinishButton();
         });
     });
@@ -146,10 +165,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const priceBS = (priceUSDT * DOLAR_RATE).toFixed(2);
 
         Swal.fire({
-            title: 'Enviando comprobante...',
-            html: 'Notificando a la tienda...',
+            title: 'Procesando pago...',
+            html: `
+                <div class="ff-loader-container">
+                    <div class="ff-loader-text">Notificando a la tienda...</div>
+                    <div class="ff-progress-bar">
+                        <div class="ff-progress-fill"></div>
+                    </div>
+                </div>
+            `,
             allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
+            showConfirmButton: false,
+            background: 'rgba(20, 10, 35, 0.95)',
+            color: '#fff'
         });
 
         try {
@@ -204,5 +232,26 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error al consultar servidor local:', e);
             return null;
         }
-    }
+    window.copyData = function(method) {
+        let textToCopy = '';
+        if (method === 'pagomovil') {
+            textToCopy = 'Banco: Banplus (0174)\\nTeléfono: 04243790757\\nCédula: V17716286';
+        } else if (method === 'binance') {
+            textToCopy = '198080894'; // Copiar solo el ID es lo mejor para Binance
+        }
+        
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Copiado!',
+                text: 'Datos copiados al portapapeles.',
+                timer: 1500,
+                showConfirmButton: false,
+                background: 'rgba(20, 10, 35, 0.95)',
+                color: '#fff'
+            });
+        }).catch(err => {
+            console.error('Error al copiar: ', err);
+        });
+    };
 });
