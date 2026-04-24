@@ -1,0 +1,12 @@
+{
+  "name": "ff-id-verificador",
+  "version": "1.0.0",
+  "description": "Servidor de verificación de ID Free Fire via Netfreelat",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
