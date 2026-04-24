@@ -154,6 +154,102 @@ body::before {
     font-weight: 600;
 }
 
+/* Dashboard Styles */
+.main-container {
+    max-width: 500px;
+    transition: var(--transition);
+}
+
+.main-container.expanded {
+    max-width: 800px;
+}
+
+.section-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.2rem;
+    color: var(--text-white);
+    margin: 25px 0 15px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.packages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.package-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.package-card:hover {
+    background: rgba(255, 90, 95, 0.05);
+    border-color: rgba(255, 90, 95, 0.3);
+    transform: scale(1.02);
+}
+
+.package-card.selected {
+    background: rgba(255, 90, 95, 0.1);
+    border-color: var(--primary);
+    box-shadow: 0 0 15px rgba(255, 90, 95, 0.2);
+}
+
+.package-card.selected::after {
+    content: '\f058';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: var(--primary);
+    font-size: 1.2rem;
+}
+
+.diamond-icon {
+    font-size: 2.5rem;
+    color: #4CC9F0;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 0 10px rgba(76, 201, 240, 0.4));
+}
+
+.pack-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pack-info .amount {
+    font-size: 1.3rem;
+    font-weight: 800;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.pack-info .bonus {
+    font-size: 0.8rem;
+    color: #4CAF50;
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+.buy-btn:disabled {
+    background: #333;
+    cursor: not-allowed;
+    opacity: 0.5;
+    box-shadow: none;
+}
+
 /* Custom SweetAlert Styles */
 .swal2-popup {
     background: #121217 !important;

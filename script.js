@@ -11,18 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const uid = playerInput.value.trim();
 
         if (!uid) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Campo Vacío',
-                text: 'Por favor, ingresa un ID válido.',
-                confirmButtonText: 'Entendido'
-            });
+            Swal.fire({ icon: 'warning', title: 'Campo Vacío', text: 'Ingresa un ID.', confirmButtonText: 'OK' });
             return;
         }
 
         Swal.fire({
             title: 'Validando ID...',
-            html: 'Consultando servidores de Free Fire...',
+            html: 'Consultando servidores...',
             allowOutsideClick: false,
             didOpen: () => Swal.showLoading()
         });
@@ -31,30 +26,66 @@ document.addEventListener('DOMContentLoaded', () => {
             const playerName = await checkPlayerId(uid);
 
             if (playerName) {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Jugador Encontrado!',
-                    html: `
-                        <p style="color:#B0B0B0; margin-bottom:10px;">Nombre del Jugador:</p>
-                        <strong style="font-size: 1.8rem; color: #FF5A5F;">${playerName}</strong>
-                        <p style="color:#B0B0B0; margin-top:12px; font-size:0.85rem;">ID: ${uid}</p>
-                    `,
-                    confirmButtonText: '✔ Confirmar',
-                    background: '#121217',
-                    color: '#fff'
-                });
+                Swal.close();
+                
+                // Mostrar sección de paquetes
+                document.getElementById('packages-section').style.display = 'block';
+                document.querySelector('.main-container').classList.add('expanded');
+                
+                // Cambiar el diseño del input (deshabilitarlo y mostrar nombre)
+                playerInput.disabled = true;
+                verifyBtn.innerHTML = `<i class="fa-solid fa-user-check"></i> ${playerName}`;
+                verifyBtn.classList.remove('btn-primary');
+                verifyBtn.style.background = '#4CAF50';
+                verifyBtn.style.cursor = 'default';
+                
             } else {
                 throw new Error('Jugador no encontrado');
             }
         } catch (error) {
             console.error('Error:', error);
+            Swal.fire({ icon: 'error', title: 'Error', text: 'ID no encontrado.', confirmButtonText: 'Reintentar' });
+        }
+    });
+
+    // Lógica de selección de paquetes
+    const packageCards = document.querySelectorAll('.package-card');
+    const buyBtn = document.getElementById('buy-btn');
+    let selectedPackage = null;
+
+    packageCards.forEach(card => {
+        card.addEventListener('click', () => {
+            // Quitar selección previa
+            packageCards.forEach(c => c.classList.remove('selected'));
+            
+            // Seleccionar actual
+            card.classList.add('selected');
+            selectedPackage = {
+                amount: card.dataset.amount,
+                bonus: card.dataset.bonus
+            };
+            
+            // Habilitar botón de compra
+            buyBtn.disabled = false;
+        });
+    });
+
+    buyBtn.addEventListener('click', () => {
+        if (selectedPackage) {
             Swal.fire({
-                icon: 'error',
-                title: 'ID No Encontrado',
-                text: 'No se encontró ningún jugador con ese ID. Verifica que sea correcto.',
-                confirmButtonText: 'Reintentar',
-                background: '#121217',
-                color: '#fff'
+                icon: 'info',
+                title: 'Resumen del Pedido',
+                html: `
+                    ID: <b>${playerInput.value}</b><br>
+                    Paquete: <b>${selectedPackage.amount} + ${selectedPackage.bonus} Diamantes</b>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Ir a Pagar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire('¡Redirigiendo!', 'Aquí conectaríamos con la pasarela de pago.', 'success');
+                }
             });
         }
     });
