@@ -71,7 +71,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error:', error);
-            Swal.fire({ icon: 'error', title: 'Error', text: 'ID no encontrado.', confirmButtonText: 'Reintentar' });
+            Swal.fire({ 
+                icon: 'error', 
+                title: 'ERROR', 
+                text: 'ID NO ENCONTRADO EN GARENA. FAVOR CHEQUEAR SU ID, GRACIAS.', 
+                confirmButtonText: 'Reintentar',
+                background: 'rgba(20, 10, 35, 0.95)',
+                color: '#fff'
+            });
         }
     });
 
@@ -232,12 +239,16 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error al consultar servidor local:', e);
             return null;
         }
+    }
+    
     window.copyData = function(method) {
         let textToCopy = '';
         if (method === 'pagomovil') {
-            textToCopy = 'Banco: Banplus (0174)\\nTeléfono: 04243790757\\nCédula: V17716286';
+            const amount = document.getElementById('amount-pagomovil').value.replace(' Bs', '').trim();
+            textToCopy = `0174 04243790757 17716286 ${amount}`;
         } else if (method === 'binance') {
-            textToCopy = '198080894'; // Copiar solo el ID es lo mejor para Binance
+            const amount = document.getElementById('amount-binance').value.replace(' USDT', '').trim();
+            textToCopy = `198080894 ${amount}`;
         }
         
         navigator.clipboard.writeText(textToCopy).then(() => {
