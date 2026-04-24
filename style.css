@@ -250,6 +250,63 @@ body::before {
     box-shadow: none;
 }
 
+.payment-methods {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.payment-method-card {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 15px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.payment-method-card i {
+    font-size: 1.5rem;
+    color: var(--text-gray);
+}
+
+.payment-method-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.payment-method-card.selected {
+    border-color: var(--primary);
+    background: rgba(255, 90, 95, 0.08);
+}
+
+.payment-method-card.selected i {
+    color: var(--primary);
+}
+
+.info-box {
+    background: rgba(0, 0, 0, 0.2);
+    border-left: 4px solid var(--primary);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.info-box p {
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    color: var(--text-gray);
+}
+
+.info-box p strong {
+    color: var(--text-white);
+}
+
 /* Custom SweetAlert Styles */
 .swal2-popup {
     background: #121217 !important;

@@ -72,22 +72,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
     buyBtn.addEventListener('click', () => {
         if (selectedPackage) {
-            Swal.fire({
-                icon: 'info',
-                title: 'Resumen del Pedido',
-                html: `
-                    ID: <b>${playerInput.value}</b><br>
-                    Paquete: <b>${selectedPackage.amount} + ${selectedPackage.bonus} Diamantes</b>
-                `,
-                showCancelButton: true,
-                confirmButtonText: 'Ir a Pagar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire('¡Redirigiendo!', 'Aquí conectaríamos con la pasarela de pago.', 'success');
-                }
-            });
+            // Ocultar paquetes y mostrar pagos
+            document.getElementById('packages-section').style.display = 'none';
+            document.getElementById('payment-section').style.display = 'block';
         }
+    });
+
+    // Lógica de Métodos de Pago
+    const paymentCards = document.querySelectorAll('.payment-method-card');
+    const finishBtn = document.getElementById('finish-btn');
+    const backBtn = document.getElementById('back-btn');
+    let selectedMethod = null;
+
+    paymentCards.forEach(card => {
+        card.addEventListener('click', () => {
+            paymentCards.forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedMethod = card.dataset.method;
+
+            // Mostrar detalles correspondientes
+            document.getElementById('details-pagomovil').style.display = selectedMethod === 'pagomovil' ? 'block' : 'none';
+            document.getElementById('details-binance').style.display = selectedMethod === 'binance' ? 'block' : 'none';
+            
+            checkFinishButton();
+        });
+    });
+
+    const refPagoMovil = document.getElementById('ref-pagomovil');
+    const refBinance = document.getElementById('ref-binance');
+
+    [refPagoMovil, refBinance].forEach(input => {
+        input.addEventListener('input', checkFinishButton);
+    });
+
+    function checkFinishButton() {
+        if (selectedMethod === 'pagomovil' && refPagoMovil.value.trim().length >= 4) {
+            finishBtn.disabled = false;
+        } else if (selectedMethod === 'binance' && refBinance.value.trim().length >= 5) {
+            finishBtn.disabled = false;
+        } else {
+            finishBtn.disabled = true;
+        }
+    }
+
+    backBtn.addEventListener('click', () => {
+        document.getElementById('payment-section').style.display = 'none';
+        document.getElementById('packages-section').style.display = 'block';
+    });
+
+    finishBtn.addEventListener('click', () => {
+        const ref = selectedMethod === 'pagomovil' ? refPagoMovil.value : refBinance.value;
+        
+        Swal.fire({
+            icon: 'success',
+            title: '¡Pedido Recibido!',
+            html: `
+                <p>Tu pago está siendo verificado.</p>
+                <div style="text-align: left; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                    <p><strong>ID:</strong> ${playerInput.value}</p>
+                    <p><strong>Paquete:</strong> ${selectedPackage.amount} + ${selectedPackage.bonus} diamantes</p>
+                    <p><strong>Referencia:</strong> ${ref}</p>
+                </div>
+                <p style="margin-top: 15px; font-size: 0.9rem; color: #888;">Recibirás tus diamantes en máximo 15 minutos.</p>
+            `,
+            confirmButtonText: 'Finalizar'
+        }).then(() => {
+            location.reload(); // Reiniciar para nueva compra
+        });
     });
 
     async function checkPlayerId(uid) {

@@ -85,6 +85,51 @@
                 </button>
             </div>
 
+            <!-- Payment Gateway Section (Hidden by default) -->
+            <div id="payment-section" class="payment-container" style="display: none;">
+                <h2 class="section-title">Método de Pago</h2>
+                <div class="payment-methods">
+                    <div class="payment-method-card" data-method="pagomovil">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                        <span>Pago Móvil</span>
+                    </div>
+                    <div class="payment-method-card" data-method="binance">
+                        <i class="fa-brands fa-bitcoin"></i>
+                        <span>Binance Pay</span>
+                    </div>
+                </div>
+
+                <!-- Pago Móvil Details -->
+                <div id="details-pagomovil" class="method-details" style="display: none;">
+                    <div class="info-box">
+                        <p><strong>Banco:</strong> Banesco (0134)</p>
+                        <p><strong>Teléfono:</strong> 0412-1234567</p>
+                        <p><strong>Cédula/RIF:</strong> V-12345678</p>
+                    </div>
+                    <div class="input-group" style="margin-top: 15px;">
+                        <input type="text" id="ref-pagomovil" placeholder="Número de Referencia (4-6 dígitos)">
+                    </div>
+                </div>
+
+                <!-- Binance Details -->
+                <div id="details-binance" class="method-details" style="display: none;">
+                    <div class="info-box">
+                        <p><strong>Binance ID:</strong> 123456789</p>
+                        <p><strong>Nombre:</strong> Netfreelat Store</p>
+                    </div>
+                    <div class="input-group" style="margin-top: 15px;">
+                        <input type="text" id="ref-binance" placeholder="ID de Transacción Binance">
+                    </div>
+                </div>
+
+                <button id="finish-btn" class="btn-primary" style="margin-top: 20px;" disabled>
+                    Confirmar Pago
+                </button>
+                <button id="back-btn" class="btn-secondary" style="margin-top: 10px; background: transparent; border: 1px solid rgba(255,255,255,0.1); width: 100%; color: #aaa; padding: 10px; border-radius: 10px; cursor: pointer;">
+                    Volver a Paquetes
+                </button>
+            </div>
+
             <div class="footer-text">
                 <p>Compatible con todas las regiones de Free Fire</p>
                 <p style="margin-top: 10px;">Desarrollado con ❤️ para la comunidad</p>
