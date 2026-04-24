@@ -120,25 +120,44 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('packages-section').style.display = 'block';
     });
 
-    finishBtn.addEventListener('click', () => {
+    finishBtn.addEventListener('click', async () => {
         const ref = selectedMethod === 'pagomovil' ? refPagoMovil.value : refBinance.value;
-        
+        const name = verifyBtn.innerText.trim();
+        const packText = `${selectedPackage.amount} + ${selectedPackage.bonus}`;
+
         Swal.fire({
-            icon: 'success',
-            title: '¡Pedido Recibido!',
-            html: `
-                <p>Tu pago está siendo verificado.</p>
-                <div style="text-align: left; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
-                    <p><strong>ID:</strong> ${playerInput.value}</p>
-                    <p><strong>Paquete:</strong> ${selectedPackage.amount} + ${selectedPackage.bonus} diamantes</p>
-                    <p><strong>Referencia:</strong> ${ref}</p>
-                </div>
-                <p style="margin-top: 15px; font-size: 0.9rem; color: #888;">Recibirás tus diamantes en máximo 15 minutos.</p>
-            `,
-            confirmButtonText: 'Finalizar'
-        }).then(() => {
-            location.reload(); // Reiniciar para nueva compra
+            title: 'Enviando comprobante...',
+            html: 'Notificando a la tienda...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
         });
+
+        try {
+            // Llamar al servidor para enviar la notificación por Telegram
+            const notifyUrl = `https://ff-verificador.onrender.com/notificar?uid=${playerInput.value}&name=${encodeURIComponent(name)}&pack=${encodeURIComponent(packText)}&method=${selectedMethod}&ref=${encodeURIComponent(ref)}`;
+            
+            await fetch(notifyUrl);
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Pedido Recibido!',
+                html: `
+                    <p>Tu pago está siendo verificado.</p>
+                    <div style="text-align: left; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                        <p><strong>ID:</strong> ${playerInput.value}</p>
+                        <p><strong>Paquete:</strong> ${packText} diamantes</p>
+                        <p><strong>Referencia:</strong> ${ref}</p>
+                    </div>
+                    <p style="margin-top: 15px; font-size: 0.9rem; color: #888;">Recibirás tus diamantes en máximo 15 minutos.</p>
+                `,
+                confirmButtonText: 'Finalizar'
+            }).then(() => {
+                location.reload();
+            });
+        } catch (error) {
+            console.error('Error enviando notificación:', error);
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo enviar la notificación, pero tu pago fue registrado.' });
+        }
     });
 
     async function checkPlayerId(uid) {

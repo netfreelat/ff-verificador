@@ -99,6 +99,45 @@ const server = http.createServer((req, res) => {
 
         apiReq.end();
 
+    } else if (parsedUrl.pathname === '/notificar') {
+        const uid = parsedUrl.searchParams.get('uid');
+        const name = parsedUrl.searchParams.get('name');
+        const pack = parsedUrl.searchParams.get('pack');
+        const method = parsedUrl.searchParams.get('method');
+        const ref = parsedUrl.searchParams.get('ref');
+
+        // --- CONFIGURACIÓN DE TELEGRAM ---
+        const BOT_TOKEN = 'TU_BOT_TOKEN_AQUI'; // Reemplazar con el token de @BotFather
+        const CHAT_ID = 'TU_CHAT_ID_AQUI';     // Reemplazar con tu ID de chat
+        // ---------------------------------
+
+        const message = `
+🔥 *NUEVO PEDIDO DE DIAMANTES* 🔥
+-------------------------------
+👤 *Jugador:* ${name}
+🆔 *ID:* ${uid}
+💎 *Paquete:* ${pack}
+💰 *Método:* ${method === 'pagomovil' ? 'Pago Móvil' : 'Binance Pay'}
+📝 *Referencia:* \`${ref}\`
+-------------------------------
+⏰ _Verifica el pago y recarga pronto._
+        `;
+
+        const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}&parse_mode=Markdown`;
+
+        https.get(telegramUrl, (apiRes) => {
+            let body = '';
+            apiRes.on('data', chunk => body += chunk);
+            apiRes.on('end', () => {
+                res.writeHead(200);
+                res.end(JSON.stringify({ success: true, info: 'Notificación enviada' }));
+            });
+        }).on('error', (e) => {
+            console.error('Error enviando a Telegram:', e.message);
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: 'Error al enviar notificación' }));
+        });
+
     } else if (parsedUrl.pathname === '/health') {
         res.writeHead(200);
         res.end(JSON.stringify({ status: 'ok' }));
