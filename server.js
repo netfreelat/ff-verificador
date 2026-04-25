@@ -123,7 +123,7 @@ const server = http.createServer((req, res) => {
 💳 *Método:* ${method === 'pagomovil' ? 'Pago Móvil' : 'Binance Pay'}
 📝 *Referencia:* \`${ref}\`
 -------------------------------
-⏰ _Verifica el pago y recarga pronto._
+⏰ _Verifica el pago y presiona un botón:_
         `;
 
         const payload = JSON.stringify({
@@ -133,8 +133,8 @@ const server = http.createServer((req, res) => {
             reply_markup: {
                 inline_keyboard: [
                     [
-                        { text: "✅ ACEPTAR", callback_data: `action_accept_${uid}` },
-                        { text: "❌ RECHAZAR", callback_data: `action_reject_${uid}` }
+                        { text: "✅ ACEPTAR", callback_data: `accept|${uid}|${name}|${pack}` },
+                        { text: "❌ RECHAZAR", callback_data: `reject|${uid}|${name}|${pack}` }
                     ]
                 ]
             }
@@ -168,6 +168,70 @@ const server = http.createServer((req, res) => {
         tgReq.write(payload);
         tgReq.end();
 
+    } else if (parsedUrl.pathname === '/webhook' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const update = JSON.parse(body);
+                if (update.callback_query) {
+                    const callbackQuery = update.callback_query;
+                    const data = callbackQuery.data;
+                    const messageId = callbackQuery.message.message_id;
+                    const chatId = callbackQuery.message.chat.id;
+                    
+                    const [action, uid, name, pack] = data.split('|');
+                    
+                    let newText = '';
+                    if (action === 'accept') {
+                        newText = `✅ *PEDIDO COMPLETADO*\n\n👤 *Jugador:* ${name}\n🆔 *ID:* ${uid}\n💎 *Paquete:* ${pack}\n\n✨ _Los diamantes han sido enviados._`;
+                    } else {
+                        newText = `❌ *PEDIDO RECHAZADO*\n\n👤 *Jugador:* ${name}\n🆔 *ID:* ${uid}\n💎 *Paquete:* ${pack}\n\n⚠️ _El pago no pudo ser verificado._`;
+                    }
+
+                    // Editar el mensaje original para quitar los botones y mostrar el estado
+                    const editPayload = JSON.stringify({
+                        chat_id: chatId,
+                        message_id: messageId,
+                        text: newText,
+                        parse_mode: 'Markdown'
+                    });
+
+                    const editOptions = {
+                        hostname: 'api.telegram.org',
+                        path: `/bot${process.env.TELEGRAM_BOT_TOKEN}/editMessageText`,
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Content-Length': Buffer.byteLength(editPayload)
+                        }
+                    };
+
+                    const editReq = https.request(editOptions, (editRes) => {
+                        editRes.on('end', () => {
+                            // Responder a la callback query para quitar el "reloj" del botón
+                            const answerPayload = JSON.stringify({ callback_query_id: callbackQuery.id });
+                            const answerReq = https.request({
+                                hostname: 'api.telegram.org',
+                                path: `/bot${process.env.TELEGRAM_BOT_TOKEN}/answerCallbackQuery`,
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' }
+                            });
+                            answerReq.write(answerPayload);
+                            answerReq.end();
+                        });
+                    });
+                    editReq.write(editPayload);
+                    editReq.end();
+                }
+                res.writeHead(200);
+                res.end('OK');
+            } catch (e) {
+                console.error('Error en webhook:', e);
+                res.writeHead(400);
+                res.end('Error');
+            }
+        });
     } else if (parsedUrl.pathname === '/health') {
         res.writeHead(200);
         res.end(JSON.stringify({ status: 'ok' }));

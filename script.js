@@ -2,6 +2,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- CONFIGURACIÓN DE PRECIOS ---
     const DOLAR_RATE = 635.00; // CAMBIA ESTE NÚMERO PARA ACTUALIZAR PRECIOS EN BS
     // --------------------------------
+    
+    // Detectar si estamos en local o en la nube
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || !window.location.hostname;
+    const SERVER_URL = isLocal ? 'http://localhost:3500' : 'https://ff-verificador.onrender.com';
 
     const verifyBtn = document.getElementById('verify-btn');
     const playerInput = document.getElementById('player-id');
@@ -188,10 +192,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         try {
-            const messageParams = `uid=${playerInput.value}&name=${encodeURIComponent(name)}&pack=${encodeURIComponent(packText)}&method=${selectedMethod}&ref=${encodeURIComponent(ref)}&price=${priceUSDT}USDT/${priceBS}Bs`;
-            const notifyUrl = `https://ff-verificador.onrender.com/notificar?${messageParams}`;
+            const notifyUrl = `${SERVER_URL}/notificar?${messageParams}`;
             
-            await fetch(notifyUrl);
+            const notifyRes = await fetch(notifyUrl);
+            if (!notifyRes.ok) throw new Error('Error al notificar');
 
             Swal.fire({
                 icon: 'success',
@@ -217,8 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function checkPlayerId(uid) {
-        // URL del servidor en la nube (Render) — funciona para todos los usuarios
-        const SERVER_URL = 'https://ff-verificador.onrender.com';
         const localServerUrl = `${SERVER_URL}/verificar?uid=${uid}`;
 
         try {
