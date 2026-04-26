@@ -24,6 +24,21 @@
     box-sizing: border-box;
 }
 
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--secondary);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-dark);
@@ -141,6 +156,38 @@ body::before {
     font-size: 0.95rem;
 }
 
+/* WhatsApp Button */
+.whatsapp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: #25D366;
+    color: white;
+    text-decoration: none;
+    padding: 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    transition: var(--transition);
+    box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.whatsapp-btn:hover {
+    background: #20ba5a;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+}
+
+.whatsapp-btn i {
+    font-size: 1.3rem;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4));
+}
+
 .input-group {
     position: relative;
     margin-bottom: 25px;
@@ -149,44 +196,105 @@ body::before {
 .input-group input {
     width: 100%;
     background: rgba(0, 0, 0, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 15px 20px;
     color: white;
     font-size: 1.1rem;
-    font-weight: 600;
-    text-align: center;
+    border: none;
+    outline: none;
     transition: var(--transition);
 }
 
+.btn-input-action {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--secondary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: var(--transition);
+}
+
+.btn-input-action:hover {
+    opacity: 1;
+    text-shadow: 0 0 10px var(--secondary);
+}
+
 .input-group input:focus {
-    outline: none;
     border-color: var(--primary);
-    box-shadow: var(--glow);
-    background: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 15px rgba(157, 0, 255, 0.3);
 }
 
 .btn-primary {
     width: 100%;
     background: var(--primary);
     color: white;
+    padding: 15px;
     border: none;
     border-radius: 12px;
-    padding: 15px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
     font-size: 1rem;
+    font-weight: 700;
     cursor: pointer;
     transition: var(--transition);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 4px 15px rgba(157, 0, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 15px rgba(157, 0, 255, 0.4);
 }
 
 .btn-primary:hover {
-    background: var(--primary-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(157, 0, 255, 0.4);
+    box-shadow: 0 6px 20px rgba(157, 0, 255, 0.6);
+}
+
+.btn-secondary-outline {
+    width: 100%;
+    background: transparent;
+    color: var(--text-gray);
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.secondary-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 0px;
+}
+
+.btn-secondary-outline:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border-color: var(--secondary);
+}
+
+.btn-star-small {
+    background: transparent;
+    border: none;
+    color: #ffd700;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: var(--transition);
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.3));
+}
+
+.btn-star-small:hover {
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
 }
 
 .btn-primary:active {
@@ -197,6 +305,36 @@ body::before {
     margin-top: 25px;
     font-size: 0.8rem;
     color: var(--text-gray);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.support-btn {
+    margin-top: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-white);
+    padding: 8px 20px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: var(--transition);
+}
+
+.support-btn:hover {
+    background: rgba(37, 211, 102, 0.15);
+    border-color: #25D366;
+    color: #25D366;
+    transform: translateY(-2px);
+}
+
+.support-btn i {
+    font-size: 1rem;
 }
 
 .footer-text a {
@@ -237,6 +375,63 @@ body::before {
     font-size: 1.8rem;
     font-weight: 800;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+}
+
+.points-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    color: #ffd700;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+}
+
+.btn-redeem-small {
+    display: block;
+    margin: 0 auto;
+    background: linear-gradient(90deg, #FFD700, #FFA500);
+    color: #000;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: var(--transition);
+    box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+}
+
+.btn-redeem-small:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 215, 0, 0.5);
+}
+
+.btn-change-id {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-gray);
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: var(--transition);
+    width: 100%;
+}
+
+.btn-change-id:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border-color: white;
 }
 
 /* Dashboard Styles */
@@ -513,4 +708,183 @@ body::before {
     40% { width: 70%; }
     80% { width: 90%; }
     100% { width: 100%; }
+}
+
+/* Receipt Styles (Custom Comprobante - Dark Mode) */
+.receipt-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    padding: 30px 20px;
+    border-radius: 20px;
+    border: 1px solid rgba(157, 0, 255, 0.3);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.receipt-success-icon {
+    width: 70px;
+    height: 70px;
+    background: rgba(0, 240, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--secondary);
+    font-size: 2.2rem;
+    margin-bottom: 15px;
+    border: 2px solid var(--secondary);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+}
+
+.receipt-title {
+    color: #fff;
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 25px;
+    font-family: 'Montserrat', sans-serif;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.receipt-card {
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    width: 100%;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: left;
+    font-family: 'Inter', sans-serif;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 25px;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+}
+
+.receipt-logo {
+    text-align: center;
+    margin-bottom: 25px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 1.8rem;
+    background: linear-gradient(to right, var(--secondary), var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 3px;
+}
+
+.receipt-logo span {
+    color: inherit;
+    -webkit-text-fill-color: transparent;
+}
+
+.receipt-info p {
+    margin: 10px 0;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: var(--text-gray);
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 8px;
+}
+
+.receipt-info p:last-child {
+    border-bottom: none;
+}
+
+.receipt-info strong {
+    color: var(--secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+}
+
+.receipt-info span.val {
+    color: #fff;
+    font-weight: 500;
+}
+
+.status-pending {
+    color: #ffd700 !important;
+    font-weight: 700 !important;
+    animation: blink 1.5s infinite;
+}
+
+.status-approved {
+    color: #25D366 !important;
+    font-weight: 700 !important;
+}
+
+.status-rejected {
+    color: #ff4b2b !important;
+    font-weight: 700 !important;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.receipt-ticket {
+    margin-top: 25px;
+    text-align: center;
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    opacity: 0.8;
+}
+
+.receipt-actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.btn-action {
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-size: 1.2rem;
+}
+
+.btn-action:hover {
+    transform: translateY(-3px);
+}
+
+.btn-share { 
+    background: rgba(157, 0, 255, 0.2); 
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    width: 60px; 
+}
+
+.btn-fav { 
+    background: rgba(255, 20, 147, 0.1); 
+    border: 1px solid #ff1493;
+    color: #ff1493;
+    width: 60px; 
+}
+
+.btn-continue-receipt { 
+    background: var(--primary); 
+    flex: 1;
+    text-transform: uppercase;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(157, 0, 255, 0.4);
 }

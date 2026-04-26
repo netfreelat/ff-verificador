@@ -3,12 +3,145 @@ document.addEventListener('DOMContentLoaded', () => {
     const DOLAR_RATE = 635.00; // CAMBIA ESTE NÚMERO PARA ACTUALIZAR PRECIOS EN BS
     // --------------------------------
     
-    // Detectar si estamos en local o en la nube
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || !window.location.hostname;
-    const SERVER_URL = isLocal ? 'http://localhost:3500' : 'https://ff-verificador.onrender.com';
+    // Detectar si estamos en local, en el túnel o en la nube
+    const hostname = window.location.hostname;
+    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || !hostname;
+    const isTunnel = hostname.includes('loca.lt');
+    
+    const SERVER_URL = isTunnel ? window.location.origin : (isLocal ? 'http://localhost:3500' : 'https://ff-verificador.onrender.com');
 
-    const verifyBtn = document.getElementById('verify-btn');
     const playerInput = document.getElementById('player-id');
+    const verifyBtn = document.getElementById('verify-btn');
+    const loadLastIdBtn = document.getElementById('load-last-id');
+    const historyBtn = document.getElementById('history-btn');
+    const favoritesBtn = document.getElementById('favorites-btn');
+    const addFavoriteBtn = document.getElementById('add-favorite-btn');
+    const changeIdBtn = document.getElementById('change-id-btn');
+    const resetUiBtn = document.getElementById('reset-ui-btn');
+
+    // Manejar Último ID usado
+    const lastId = localStorage.getItem('ff_last_id');
+    if (lastId) {
+        loadLastIdBtn.style.display = 'block';
+        loadLastIdBtn.addEventListener('click', () => {
+            playerInput.value = lastId;
+        });
+    }
+
+    // Manejar Botón de Historial
+    historyBtn.addEventListener('click', () => {
+        const myOrders = JSON.parse(localStorage.getItem('ff_my_orders') || '[]');
+        if (myOrders.length === 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Sin Historial',
+                text: 'Aún no has realizado ninguna compra en este navegador.',
+                background: 'rgba(20, 10, 35, 0.95)',
+                color: '#fff',
+                confirmButtonColor: '#9D00FF'
+            });
+            return;
+        }
+
+        let historyHtml = '<div class="history-list" style="max-height: 300px; overflow-y: auto; padding-right: 10px;">';
+        [...myOrders].reverse().forEach(order => {
+            const statusClass = order.status === 'approved' ? 'status-approved' : (order.status === 'rejected' ? 'status-rejected' : 'status-pending');
+            const statusText = order.status === 'approved' ? 'APROBADO' : (order.status === 'rejected' ? 'RECHAZADO' : 'PENDIENTE');
+            historyHtml += `
+                <div class="history-item" style="border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 0; text-align: left;">
+                    <p style="margin: 0; font-size: 0.75rem; color: #aaa;">${order.date}</p>
+                    <p style="margin: 5px 0; font-weight: 700; font-size: 0.9rem;">💎 ${order.pack} diamantes</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.8rem;">Ref: <code style="color: var(--secondary);">${order.ref}</code></span>
+                        <span class="${statusClass}" style="font-size: 0.75rem; font-weight: 800;">${statusText}</span>
+                    </div>
+                </div>
+            `;
+        });
+        historyHtml += '</div>';
+
+        Swal.fire({
+            title: '<i class="fa-solid fa-receipt"></i> Mis Compras',
+            html: historyHtml,
+            background: 'rgba(20, 10, 35, 0.98)',
+            color: '#fff',
+            confirmButtonText: 'Cerrar',
+            confirmButtonColor: '#9D00FF',
+            width: '400px'
+        });
+    });
+
+    // Manejar Favoritos
+    favoritesBtn.addEventListener('click', () => {
+        const favorites = JSON.parse(localStorage.getItem('ff_favorites') || '[]');
+        if (favorites.length === 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Favoritos Vacíos',
+                text: 'No tienes IDs guardados. Verifica un ID y toca la estrella para guardarlo.',
+                background: 'rgba(20, 10, 35, 0.95)',
+                color: '#fff',
+                confirmButtonColor: '#9D00FF'
+            });
+            return;
+        }
+
+        let favHtml = '<div class="fav-list" style="max-height: 300px; overflow-y: auto;">';
+        favorites.forEach((fav, index) => {
+            favHtml += `
+                <div class="fav-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 0;">
+                    <div style="cursor: pointer; flex: 1;" onclick="window.loadFavorite('${fav.id}')">
+                        <p style="margin: 0; font-weight: 700; color: #fff; text-align: left;">${fav.name}</p>
+                        <p style="margin: 0; font-size: 0.8rem; color: var(--secondary); text-align: left;">${fav.id}</p>
+                    </div>
+                    <button onclick="window.removeFavorite(${index})" style="background:transparent; border:none; color:#ff4b2b; cursor:pointer; padding: 5px 10px;">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            `;
+        });
+        favHtml += '</div>';
+
+        Swal.fire({
+            title: '<i class="fa-solid fa-star" style="color: #ffd700;"></i> Mis Favoritos',
+            html: favHtml,
+            background: 'rgba(20, 10, 35, 0.98)',
+            color: '#fff',
+            showConfirmButton: false,
+            showCloseButton: true,
+            width: '400px'
+        });
+    });
+
+    window.loadFavorite = (id) => {
+        Swal.close();
+        playerInput.value = id;
+        verifyBtn.click(); // Esto llevará directo a recargas
+    };
+
+    window.removeFavorite = (index) => {
+        const favorites = JSON.parse(localStorage.getItem('ff_favorites') || '[]');
+        favorites.splice(index, 1);
+        localStorage.setItem('ff_favorites', JSON.stringify(favorites));
+        favoritesBtn.click(); // Recargar modal
+    };
+
+    addFavoriteBtn.addEventListener('click', () => {
+        const currentName = document.getElementById('player-name-display').innerText;
+        const currentId = playerInput.value;
+        const favorites = JSON.parse(localStorage.getItem('ff_favorites') || '[]');
+        
+        if (favorites.some(f => f.id === currentId)) {
+            Swal.fire({ icon: 'info', title: 'Ya existe', text: 'Este ID ya está en tus favoritos.', timer: 2000, showConfirmButton: false });
+            return;
+        }
+
+        favorites.push({ id: currentId, name: currentName });
+        localStorage.setItem('ff_favorites', JSON.stringify(favorites));
+        
+        addFavoriteBtn.innerHTML = '<i class="fa-solid fa-star"></i>'; // Cambiar a estrella llena
+        Swal.fire({ icon: 'success', title: 'Guardado', text: 'ID añadido a favoritos.', timer: 1500, showConfirmButton: false });
+    });
 
     // Inicializar Precios
     const updatePrices = () => {
@@ -22,6 +155,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     updatePrices();
+
+    // Cargar últimas recargas aprobadas en la marquesina
+    const loadRecentReloads = async () => {
+        try {
+            const res = await fetch(`${SERVER_URL}/recientes`);
+            const data = await res.json();
+            const marquee = document.getElementById('marquee-content');
+            
+            if (data && data.length > 0) {
+                const text = data.map(r => `✅ ${r.name} recargó ${r.pack} diamantes`).join(' | ');
+                marquee.innerText = ` ÚLTIMAS RECARGAS: ${text} | ¡Únete a los miles de jugadores que confían en nosotros! `;
+            } else {
+                marquee.innerText = " ¡BIENVENIDOS A RECARGAS FREE FIRE! – Verifica tu ID y selecciona tu paquete de diamantes preferido. ";
+            }
+        } catch (e) {
+            console.error('Error cargando recientes:', e);
+        }
+    };
+    loadRecentReloads();
+    setInterval(loadRecentReloads, 30000); // Actualizar cada 30 segundos
 
     // Permitir verificar presionando Enter
     playerInput.addEventListener('keydown', (e) => {
@@ -58,6 +211,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (playerName) {
                 Swal.close();
                 
+                // Guardar como último ID usado
+                localStorage.setItem('ff_last_id', uid);
+                loadLastIdBtn.style.display = 'block';
+
                 // Mostrar sección de paquetes
                 document.getElementById('packages-section').style.display = 'block';
                 document.querySelector('.main-container').classList.add('expanded');
@@ -69,6 +226,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const welcomeSection = document.getElementById('welcome-section');
                 document.getElementById('player-name-display').innerText = playerName;
                 welcomeSection.style.display = 'block';
+
+                // Cargar puntos del usuario
+                loadUserPoints(uid);
                 
             } else {
                 throw new Error('Jugador no encontrado');
@@ -154,13 +314,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function checkFinishButton() {
-        if (selectedMethod === 'pagomovil' && refPagoMovil.value.trim().length >= 4) {
+        const valPago = refPagoMovil.value.trim();
+        const valBinance = refBinance.value.trim();
+        
+        console.log(`[DEBUG] Método: ${selectedMethod} | Ref PagoM: ${valPago} | Ref Binance: ${valBinance}`);
+
+        if (selectedMethod === 'pagomovil' && valPago.length >= 4) {
             finishBtn.disabled = false;
-        } else if (selectedMethod === 'binance' && refBinance.value.trim().length >= 5) {
+        } else if (selectedMethod === 'binance' && valBinance.length >= 1) {
             finishBtn.disabled = false;
         } else {
             finishBtn.disabled = true;
         }
+        
+        console.log(`[DEBUG] Botón Confirmar: ${finishBtn.disabled ? 'DESACTIVADO' : 'ACTIVADO'}`);
     }
 
     backBtn.addEventListener('click', () => {
@@ -192,27 +359,176 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         try {
+            const messageParams = `uid=${playerInput.value}&name=${encodeURIComponent(name)}&pack=${encodeURIComponent(packText)}&method=${selectedMethod}&ref=${encodeURIComponent(ref)}&price=${priceUSDT}USDT/${priceBS}Bs`;
             const notifyUrl = `${SERVER_URL}/notificar?${messageParams}`;
             
             const notifyRes = await fetch(notifyUrl);
             if (!notifyRes.ok) throw new Error('Error al notificar');
 
+            // Guardar en historial local
+            const myOrders = JSON.parse(localStorage.getItem('ff_my_orders') || '[]');
+            const newOrder = {
+                ref: ref,
+                pack: selectedPackage.amount,
+                date: new Date().toLocaleString(),
+                status: 'pending'
+            };
+            myOrders.push(newOrder);
+            localStorage.setItem('ff_my_orders', JSON.stringify(myOrders));
+
+            const approvalNum = Math.floor(Math.random() * 90000) + 10000;
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            const fullDateTime = `${dateStr} ${timeStr}`;
+
             Swal.fire({
-                icon: 'success',
-                title: '¡Pedido Recibido!',
                 html: `
-                    <p>Tu pago está siendo verificado.</p>
-                    <div style="text-align: left; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
-                        <p><strong>ID:</strong> ${playerInput.value}</p>
-                        <p><strong>Paquete:</strong> ${packText} diamantes</p>
-                        <p><strong>Total:</strong> ${priceUSDT} USDT (${priceBS} Bs)</p>
-                        <p><strong>Referencia:</strong> ${ref}</p>
+                    <div class="receipt-container">
+                        <div class="receipt-success-icon"><i class="fa-solid fa-check"></i></div>
+                        <h2 class="receipt-title">¡Operación exitosa!</h2>
+                        
+                        <div class="receipt-card">
+                            <div class="receipt-logo">FREE F<span>I</span>RE</div>
+                            
+                            <div class="receipt-info">
+                                <p><strong>Plan:</strong> <span class="val">${selectedPackage.amount} diamantes</span></p>
+                                <p><strong>Bonus:</strong> <span class="val">${selectedPackage.bonus} diamantes</span></p>
+                                <p><strong>ID jugador:</strong> <span class="val">${playerInput.value}</span></p>
+                                <p><strong>Jugador:</strong> <span class="val">${name}</span></p>
+                                <p><strong>N° Aprobación:</strong> <span class="val">${approvalNum}</span></p>
+                                <p><strong>Fecha:</strong> <span class="val">${fullDateTime}</span></p>
+                                <p><strong>Estado:</strong> <span class="val status-pending" id="order-status">EN VERIFICACIÓN... ESPERE</span></p>
+                                <div id="pin-display-container" style="display: none; margin-top: 15px; padding: 15px; background: rgba(0, 240, 255, 0.1); border: 1px dashed var(--secondary); border-radius: 10px;">
+                                    <p style="margin: 0; font-size: 0.8rem; color: var(--secondary); font-weight: 700;">🔑 TU PIN DE DIAMANTES:</p>
+                                    <p id="assigned-pin" style="margin: 5px 0 0 0; font-size: 1.5rem; font-family: monospace; letter-spacing: 2px; color: #fff; font-weight: 800;"></p>
+                                    <button onclick="copyPin()" style="margin-top: 10px; background: transparent; border: 1px solid var(--secondary); color: var(--secondary); padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.7rem;"><i class="fa-solid fa-copy"></i> Copiar PIN</button>
+                                </div>
+                            </div>
+                            
+                            <div class="receipt-ticket">
+                                <i class="fa-solid fa-ticket"></i> Ticket comprobante de pago.
+                            </div>
+                        </div>
+                        
+                        <div class="receipt-actions">
+                            <button class="btn-action btn-share" title="Compartir"><i class="fa-solid fa-share-nodes"></i></button>
+                            <button class="btn-action btn-fav" title="Favorito"><i class="fa-solid fa-star"></i></button>
+                            <button class="btn-action btn-continue-receipt" onclick="location.reload()">Continuar</button>
+                        </div>
                     </div>
-                    <p style="margin-top: 15px; font-size: 0.9rem; color: #888;">Recibirás tus diamantes en máximo 15 minutos.</p>
                 `,
-                confirmButtonText: 'Finalizar'
-            }).then(() => {
-                location.reload();
+                showConfirmButton: false,
+                background: 'transparent',
+                width: '450px',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    const shareBtn = document.querySelector('.btn-share');
+                    const favBtn = document.querySelector('.btn-fav');
+                    const statusEl = document.getElementById('order-status');
+                    const successIcon = document.querySelector('.receipt-success-icon');
+                    
+                    // Polling para el estado del pedido
+                    const checkStatus = async () => {
+                        try {
+                            const res = await fetch(`${SERVER_URL}/status?ref=${ref}`);
+                            const data = await res.json();
+                            
+                            if (data.status === 'approved' || data.status === 'rejected') {
+                                // Actualizar localStorage
+                                const myOrders = JSON.parse(localStorage.getItem('ff_my_orders') || '[]');
+                                const orderIdx = myOrders.findIndex(o => o.ref === ref);
+                                if (orderIdx !== -1) {
+                                    myOrders[orderIdx].status = data.status;
+                                    localStorage.setItem('ff_my_orders', JSON.stringify(myOrders));
+                                }
+
+                                if (data.status === 'approved') {
+                                    statusEl.innerText = '✅ APROBADO';
+                                    statusEl.className = 'val status-approved';
+                                    successIcon.style.color = '#25D366';
+                                    successIcon.style.borderColor = '#25D366';
+                                    
+                                    // Lanzar confeti de celebración
+                                    confetti({
+                                        particleCount: 150,
+                                        spread: 70,
+                                        origin: { y: 0.6 },
+                                        colors: ['#ffd700', '#00c853', '#ffffff']
+                                    });
+
+                                    // Mostrar PIN si existe
+                                    if (data.pin) {
+                                        const pinContainer = document.getElementById('pin-display-container');
+                                        const pinEl = document.getElementById('assigned-pin');
+                                        pinEl.innerText = data.pin;
+                                        pinContainer.style.display = 'block';
+                                    }
+
+                                    // Mostrar modal de éxito emocionante
+                                    setTimeout(() => {
+                                        Swal.fire({
+                                            title: '<span style="color: #00c853; font-size: 2.2rem; font-weight: 900; text-shadow: 0 0 20px rgba(0,200,83,0.4);">¡RECIBIDO!</span>',
+                                            html: `
+                                                <div style="padding: 10px;">
+                                                    <div style="font-size: 4rem; margin-bottom: 20px; animation: bounce 1s infinite;">💎✨</div>
+                                                    <p style="font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 10px;">¡Tu recarga ha sido aprobada!</p>
+                                                    <p style="color: #aaa; margin-bottom: 25px; font-size: 1.1rem;">Los diamantes ya están en camino a tu cuenta de <strong>Free Fire</strong>.</p>
+                                                    <div style="background: linear-gradient(135deg, rgba(0,200,83,0.2) 0%, rgba(0,100,40,0.4) 100%); border: 2px solid #00c853; padding: 20px; border-radius: 15px; box-shadow: 0 0 30px rgba(0,200,83,0.2);">
+                                                        <span style="display: block; font-size: 0.9rem; color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">Estado Final</span>
+                                                        <span style="font-size: 1.8rem; font-weight: 900; color: #00c853; text-shadow: 0 0 10px rgba(0,200,83,0.5);">✅ APROBADO</span>
+                                                    </div>
+                                                    <p style="margin-top: 20px; color: #ffd700; font-weight: 700;">¡Gracias por confiar en nosotros!</p>
+                                                </div>
+                                            `,
+                                            background: 'rgba(15, 5, 25, 0.98)',
+                                            color: '#fff',
+                                            confirmButtonText: '¡EXCELENTE! 🎮',
+                                            confirmButtonColor: '#00c853',
+                                            backdrop: `rgba(0,0,0,0.8)`,
+                                            allowOutsideClick: false
+                                        });
+                                    }, 500);
+                                } else {
+                                    statusEl.innerText = '❌ RECHAZADO: VERIFIQUE MONTO Y REFERENCIA';
+                                    statusEl.className = 'val status-rejected';
+                                    successIcon.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                                    successIcon.style.color = '#ff4b2b';
+                                    successIcon.style.borderColor = '#ff4b2b';
+                                }
+                                clearInterval(statusInterval);
+                            }
+                        } catch (e) {
+                            console.error('Error verificando estado:', e);
+                        }
+                    };
+
+                    const statusInterval = setInterval(checkStatus, 3000);
+                    
+                    shareBtn.addEventListener('click', () => {
+                        if (navigator.share) {
+                            navigator.share({
+                                title: 'Comprobante de Recarga',
+                                text: `Recarga exitosa para ${name} (${playerInput.value}). Plan: ${selectedPackage.amount} diamantes.`,
+                                url: window.location.href
+                            }).catch(err => console.log('Error sharing:', err));
+                        } else {
+                            Swal.showValidationMessage('La función de compartir no está disponible en este navegador.');
+                        }
+                    });
+
+                    favBtn.addEventListener('click', () => {
+                        favBtn.style.color = favBtn.style.color === 'yellow' ? 'white' : 'yellow';
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
+                        Toast.fire({ icon: 'success', title: 'Agregado a favoritos' });
+                    });
+                }
             });
         } catch (error) {
             console.error('Error enviando notificación:', error);
@@ -267,4 +583,102 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error al copiar: ', err);
         });
     };
+
+    window.copyPin = () => {
+        const pinText = document.getElementById('assigned-pin').innerText;
+        navigator.clipboard.writeText(pinText).then(() => {
+            Swal.fire({
+                icon: 'success',
+                title: 'PIN Copiado',
+                text: 'Ya puedes canjear tus diamantes.',
+                timer: 1500,
+                showConfirmButton: false,
+                background: 'rgba(20, 10, 35, 0.95)',
+                color: '#fff'
+            });
+        });
+    };
+    async function loadUserPoints(uid) {
+        try {
+            const res = await fetch(`${SERVER_URL}/perfil?uid=${uid}`);
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('user-points').innerText = data.user.points;
+            }
+        } catch (e) {
+            console.error('Error cargando puntos:', e);
+        }
+    }
+
+    document.getElementById('redeem-btn').addEventListener('click', () => {
+        const uid = playerInput.value;
+        const currentPoints = parseInt(document.getElementById('user-points').innerText);
+
+        Swal.fire({
+            title: 'Canjear Puntos',
+            html: `
+                <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 20px;">Tienes <strong>${currentPoints}</strong> puntos.</p>
+                <div class="redeem-options" style="display: grid; gap: 10px;">
+                    <button class="swal2-confirm swal2-styled" onclick="window.redeem('100')">100 Diamantes (500 pts)</button>
+                    <button class="swal2-confirm swal2-styled" onclick="window.redeem('310')">310 Diamantes (1500 pts)</button>
+                    <button class="swal2-confirm swal2-styled" onclick="window.redeem('520')">520 Diamantes (2500 pts)</button>
+                </div>
+            `,
+            showConfirmButton: false,
+            showCloseButton: true,
+            background: 'rgba(20, 10, 35, 0.98)',
+            color: '#fff'
+        });
+    });
+
+    window.redeem = async (pack) => {
+        const uid = playerInput.value;
+        Swal.fire({ title: 'Procesando canje...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        try {
+            const res = await fetch(`${SERVER_URL}/canjear`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ uid, pack })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Canje Exitoso!',
+                    html: `Tu PIN es: <code style="font-size: 1.2rem; color: var(--secondary);">${data.pin}</code>`,
+                    confirmButtonText: 'Copiar PIN y Cerrar'
+                }).then(() => {
+                    navigator.clipboard.writeText(data.pin);
+                    loadUserPoints(uid);
+                });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Fallo en Canje', text: data.message });
+            }
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo procesar el canje.' });
+        }
+    };
+
+    function resetUI() {
+        // Mostrar input y botón inicial
+        document.querySelector('.input-group').style.display = 'flex';
+        document.getElementById('player-id').value = '';
+        verifyBtn.style.display = 'flex';
+
+        // Ocultar secciones secundarias
+        document.getElementById('welcome-section').style.display = 'none';
+        document.getElementById('packages-section').style.display = 'none';
+        document.getElementById('payment-section').style.display = 'none';
+        document.querySelector('.main-container').classList.remove('expanded');
+        
+        // Resetear selección de paquetes
+        selectedPackage = null;
+        document.querySelectorAll('.package-card').forEach(c => c.classList.remove('selected'));
+        buyBtn.disabled = true;
+    }
+
+    if (changeIdBtn) changeIdBtn.addEventListener('click', resetUI);
+    if (resetUiBtn) resetUiBtn.addEventListener('click', resetUI);
 });

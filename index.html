@@ -15,6 +15,9 @@
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body>
@@ -25,7 +28,7 @@
     <div class="top-banner">
         <div class="marquee">
             <i class="fa-solid fa-bullhorn"></i>
-            <span>¡PROMOCIÓN ESPECIAL! bienvenidos a recargas free fire .</span>
+            <span id="marquee-content">Cargando últimas recargas...</span>
         </div>
     </div>
 
@@ -36,19 +39,54 @@
                 <p>CENTRO DE VERIFICACIÓN</p>
             </div>
 
+
             <div class="input-group">
                 <input type="text" id="player-id" placeholder="Ingresa ID del Jugador" autocomplete="off">
+                <button id="load-last-id" class="btn-input-action" title="Usar último ID" style="display: none;">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </button>
             </div>
 
             <button id="verify-btn" class="btn-primary">
                 <i class="fa-solid fa-magnifying-glass"></i> Consultar ID
             </button>
 
+            <div class="secondary-actions">
+                <button id="history-btn" class="btn-secondary-outline">
+                    <i class="fa-solid fa-receipt"></i> Compras
+                </button>
+                <button id="favorites-btn" class="btn-secondary-outline">
+                    <i class="fa-solid fa-star"></i> Favoritos
+                </button>
+            </div>
+
+            <!-- WhatsApp Channel Button (Compact) -->
+            <a href="https://whatsapp.com/channel/0029VbCVjqL11ulRYKf1eW29" target="_blank" class="whatsapp-btn">
+                <i class="fa-brands fa-whatsapp"></i> Canal WhatsApp
+            </a>
+
             <!-- Welcome Section (Hidden by default) -->
             <div id="welcome-section" class="welcome-container" style="display: none;">
                 <div class="welcome-icon"><i class="fa-solid fa-gamepad"></i></div>
                 <p>¡Bienvenido!</p>
-                <h2 id="player-name-display">Nombre del Jugador</h2>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <h2 id="player-name-display">Nombre del Jugador</h2>
+                    <button id="add-favorite-btn" class="btn-star-small" title="Guardar en favoritos">
+                        <i class="fa-regular fa-star"></i>
+                    </button>
+                </div>
+                
+                <!-- Points Display -->
+                <div class="points-badge">
+                    <i class="fa-solid fa-star"></i> <span id="user-points">0</span> Puntos Acumulados
+                </div>
+                <button id="redeem-btn" class="btn-redeem-small">
+                    <i class="fa-solid fa-gift"></i> Canjear Puntos
+                </button>
+                
+                <button id="change-id-btn" class="btn-change-id">
+                    <i class="fa-solid fa-user-pen"></i> Cambiar ID / Salir
+                </button>
             </div>
 
             <!-- Diamond Packages Section (Hidden by default) -->
@@ -167,11 +205,20 @@
                     style="margin-top: 10px; background: transparent; border: 1px solid rgba(255,255,255,0.1); width: 100%; color: #aaa; padding: 10px; border-radius: 10px; cursor: pointer;">
                     Volver a Paquetes
                 </button>
+                <button id="reset-ui-btn" class="btn-secondary"
+                    style="margin-top: 10px; background: transparent; border: 1px solid rgba(255,0,0,0.3); width: 100%; color: #ff6b6b; padding: 10px; border-radius: 10px; cursor: pointer;">
+                    Reiniciar (Cambiar ID)
+                </button>
             </div>
 
             <div class="footer-text">
                 <p>Compatible con todas las regiones de Free Fire</p>
-                <p style="margin-top: 10px;">Desarrollado con ❤️ para la comunidad</p>
+                
+                <a href="https://wa.me/584125322412" target="_blank" class="support-btn">
+                    <i class="fa-solid fa-headset"></i> Soporte Técnico
+                </a>
+
+                <p style="margin-top: 15px;">Desarrollado con ❤️ para la comunidad</p>
             </div>
         </div>
     </div>
