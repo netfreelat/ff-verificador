@@ -506,14 +506,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     const statusInterval = setInterval(checkStatus, 3000);
                     
                     shareBtn.addEventListener('click', () => {
+                        const statusText = statusEl.innerText;
+                        const shareText = `💎 *COMPROBANTE DE RECARGA - FREE FIRE* 💎\n` +
+                                         `------------------------------------------\n` +
+                                         `👤 *Jugador:* ${name}\n` +
+                                         `🆔 *ID:* ${playerInput.value}\n` +
+                                         `📦 *Plan:* ${selectedPackage.amount} diamantes\n` +
+                                         `✨ *Bonus:* ${selectedPackage.bonus} diamantes\n` +
+                                         `🔢 *Ref:* ${approvalNum}\n` +
+                                         `📅 *Fecha:* ${fullDateTime}\n` +
+                                         `✅ *Estado:* ${statusText}\n` +
+                                         `------------------------------------------\n` +
+                                         `¡Gracias por tu compra! 🎮\n` +
+                                         `🔗 https://ff-verificador.onrender.com`;
+
                         if (navigator.share) {
                             navigator.share({
                                 title: 'Comprobante de Recarga',
-                                text: `Recarga exitosa para ${name} (${playerInput.value}). Plan: ${selectedPackage.amount} diamantes.`,
-                                url: window.location.href
+                                text: shareText
                             }).catch(err => console.log('Error sharing:', err));
                         } else {
-                            Swal.showValidationMessage('La función de compartir no está disponible en este navegador.');
+                            // Fallback a WhatsApp Web/App si no hay Web Share API
+                            const encodedText = encodeURIComponent(shareText);
+                            window.open(`https://wa.me/?text=${encodedText}`, '_blank');
                         }
                     });
 
