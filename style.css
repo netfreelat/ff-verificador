@@ -907,20 +907,34 @@ body::before {
 
     .packages-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
+        gap: 12px;
+        margin-bottom: 20px;
     }
 
     .package-card {
-        padding: 15px 10px;
+        padding: 12px 8px;
+        text-align: center;
+    }
+
+    .package-card .diamond-icon {
+        font-size: 1.2rem;
+        margin-bottom: 5px;
     }
 
     .package-card .amount {
-        font-size: 1rem;
+        font-size: 0.9rem;
+        display: block;
     }
 
-    .package-card .price {
-        font-size: 1.1rem;
+    .package-card .price-usdt {
+        font-size: 0.85rem;
     }
+
+    .package-card .price-bs {
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
 
     .main-container.expanded {
         max-width: 100%;
