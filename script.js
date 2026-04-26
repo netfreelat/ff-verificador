@@ -493,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <p><strong>Jugador:</strong> <span class="val">${name}</span></p>
                                 <p><strong>N° Aprobación:</strong> <span class="val">${approvalNum}</span></p>
                                 <p><strong>Fecha:</strong> <span class="val">${fullDateTime}</span></p>
-                                <p><strong>Estado:</strong> <span class="val status-pending" id="order-status">EN VERIFICACIÓN... ESPERE</span></p>
+                                <p><strong>Estado:</strong> <span class="val status-pending" id="order-status">VERIFICANDO PAGO...</span></p>
                                 <div id="pin-display-container" style="display: none; margin-top: 15px; padding: 15px; background: rgba(0, 240, 255, 0.1); border: 1px dashed var(--secondary); border-radius: 10px;">
                                     <p style="margin: 0; font-size: 0.8rem; color: var(--secondary); font-weight: 700;">🔑 TU PIN DE DIAMANTES:</p>
                                     <p id="assigned-pin" style="margin: 5px 0 0 0; font-size: 1.5rem; font-family: monospace; letter-spacing: 2px; color: #fff; font-weight: 800;"></p>
