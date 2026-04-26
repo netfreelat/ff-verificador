@@ -420,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `,
                 showConfirmButton: false,
                 background: 'transparent',
-                width: '450px',
+                width: window.innerWidth < 600 ? '95%' : '450px',
                 allowOutsideClick: false,
                 didOpen: () => {
                     const shareBtn = document.querySelector('.btn-share');
