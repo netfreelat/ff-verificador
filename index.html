@@ -211,6 +211,25 @@
                     </div>
                 </div>
 
+                <!-- WhatsApp Input para notificaciones -->
+                <div class="whatsapp-input-section" style="margin-top: 20px; background: rgba(37, 211, 102, 0.1); padding: 15px; border-radius: 10px; border: 1px dashed #25D366;">
+                    <label style="font-size: 0.85rem; color: #25D366; margin-bottom: 8px; display: block; text-align: left; font-weight: 600;"><i class="fa-brands fa-whatsapp"></i> Tu WhatsApp (Para enviarte el comprobante):</label>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="country-code" style="width: 80px; background: rgba(20, 10, 35, 0.8); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 10px; font-size: 0.9rem; outline: none;">
+                            <option value="58">🇻🇪 +58</option>
+                            <option value="57">🇨🇴 +57</option>
+                            <option value="56">🇨🇱 +56</option>
+                            <option value="51">🇵🇪 +51</option>
+                            <option value="593">🇪🇨 +593</option>
+                            <option value="52">🇲🇽 +52</option>
+                            <option value="54">🇦🇷 +54</option>
+                            <option value="507">🇵🇦 +507</option>
+                            <option value="1">🇺🇸 +1</option>
+                        </select>
+                        <input type="text" id="whatsapp-number" placeholder="Ej: 4121234567" inputmode="numeric" style="flex: 1; background: rgba(20, 10, 35, 0.8); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 10px; font-size: 1rem; outline: none;">
+                    </div>
+                </div>
+
                 <button id="finish-btn" class="btn-primary" style="margin-top: 20px;" disabled>
                     Confirmar Pago
                 </button>

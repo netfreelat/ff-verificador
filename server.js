@@ -11,12 +11,14 @@ const PINES_FILE = path.join(__dirname, 'pines.json');
 const RECIENTES_FILE = path.join(__dirname, 'recientes.json');
 const ORDERS_FILE = path.join(__dirname, 'pedidos.json');
 const USERS_FILE = path.join(__dirname, 'usuarios.json');
+const WA_QUEUE_FILE = path.join(__dirname, 'wa_queue.json');
 
 // Cargar persistencia
 let recentReloads = [];
 let orders = {};
 let users = {};
 let pines = { "100": [], "310": [], "520": [], "1060": [], "2180": [], "5600": [] };
+let whatsappQueue = [];
 
 try {
     if (fs.existsSync(RECIENTES_FILE)) {
@@ -31,8 +33,33 @@ try {
     if (fs.existsSync(USERS_FILE)) {
         users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
     }
+    if (fs.existsSync(WA_QUEUE_FILE)) {
+        whatsappQueue = JSON.parse(fs.readFileSync(WA_QUEUE_FILE, 'utf8'));
+    }
 } catch (e) {
     console.error('Error cargando persistencia:', e);
+}
+
+function saveWaQueue() {
+    try { fs.writeFileSync(WA_QUEUE_FILE, JSON.stringify(whatsappQueue), 'utf8'); } catch (e) {}
+}
+
+function queueWhatsAppMessage(order, isAccepted, pin = null) {
+    if (!order.wa || order.wa === 'No provisto') return;
+    
+    let msg = '';
+    if (isAccepted) {
+        msg = `💎 *RECIBO DE RECARGA - FREE FIRE* 💎\n\n✅ ¡Tu recarga ha sido APROBADA!\n\n👤 Jugador: ${order.name}\n🆔 ID: ${order.uid}\n📦 Paquete: ${order.pack}\n\nLos diamantes ya fueron enviados a tu cuenta.`;
+        if (pin) {
+            msg += `\n🔑 Tu PIN es: ${pin}`;
+        }
+        msg += `\n\n¡Gracias por tu compra!`;
+    } else {
+        msg = `❌ *RECARGA RECHAZADA*\n\nEstimado ${order.name}, tu recarga por el paquete de ${order.pack} no pudo ser procesada.\n\nMotivo: Referencia o monto incorrecto.\nSi crees que es un error, contacta a soporte.\n\nID: ${order.uid}`;
+    }
+
+    whatsappQueue.push({ id: Date.now().toString(), number: order.wa, message: msg });
+    saveWaQueue();
 }
 
 function saveUsers() {
@@ -260,12 +287,13 @@ const server = http.createServer((req, res) => {
         const method = parsedUrl.searchParams.get('method');
         const ref = parsedUrl.searchParams.get('ref');
         const price = parsedUrl.searchParams.get('price') || 'N/A';
+        const wa = parsedUrl.searchParams.get('wa') || 'No provisto';
 
         console.log(`\n[NOTIFICACIÓN] Recibida solicitud de pago de: ${name} (ID: ${uid})`);
-        console.log(`[NOTIFICACIÓN] Referencia: ${ref} | Paquete: ${pack}\n`);
+        console.log(`[NOTIFICACIÓN] Referencia: ${ref} | Paquete: ${pack} | WA: ${wa}\n`);
 
         // Guardar pedido como pendiente
-        orders[ref] = { uid, name, pack, method, price, status: 'pending', time: new Date().toISOString() };
+        orders[ref] = { uid, name, pack, method, price, status: 'pending', time: new Date().toISOString(), wa: wa };
         try {
             fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
         } catch (e) {
@@ -286,6 +314,7 @@ const server = http.createServer((req, res) => {
 💰 *Total:* ${price}
 💳 *Método:* ${method === 'pagomovil' ? 'Pago Móvil' : 'Binance Pay'}
 📝 *Referencia:* \`${ref}\`
+📱 *WhatsApp:* \`+${wa}\`
 -------------------------------
 ⏰ _Verifica el pago y presiona un botón:_
         `;
@@ -387,6 +416,7 @@ const server = http.createServer((req, res) => {
                         const nameMatch = text.match(/Jugador:\s*(.+)/);
                         const packMatch = text.match(/Paquete:\s*(.+)/);
                         const priceMatch = text.match(/Total:\s*(.+)/);
+                        const waMatch = text.match(/WhatsApp:\s*\+?(\d+)/);
                         
                         if (uidMatch && packMatch) {
                             orders[ref] = {
@@ -394,6 +424,7 @@ const server = http.createServer((req, res) => {
                                 name: nameMatch ? nameMatch[1].trim() : 'Desconocido',
                                 pack: packMatch[1].trim(),
                                 price: priceMatch ? priceMatch[1].trim() : '0USDT',
+                                wa: waMatch ? waMatch[1].trim() : 'No provisto',
                                 status: 'pending'
                             };
                             order = orders[ref];
@@ -446,6 +477,13 @@ const server = http.createServer((req, res) => {
                         newText = `❌ *PEDIDO RECHAZADO*\n\n👤 *Jugador:* ${order.name}\n🆔 *ID:* ${order.uid}\n\n⚠️ _El pago no fue aprobado._`;
                         orders[ref].status = 'rejected';
                         fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
+                    }
+
+                    // Encolar mensaje de WhatsApp si corresponde (éxito o rechazo final)
+                    if (action === 'reject') {
+                        queueWhatsAppMessage(order, false);
+                    } else if (action === 'accept' && orders[ref].status === 'approved') {
+                        queueWhatsAppMessage(order, true, orders[ref].pin);
                     }
 
                     // 2. Editar el mensaje original con el resultado
@@ -624,6 +662,24 @@ const server = http.createServer((req, res) => {
             console.error('[CANJE_PIN] Error conectando a Netfreelat:', err.message);
             res.writeHead(500);
             res.end(JSON.stringify({ success: false, message: 'Error de conexión con el proveedor.' }));
+        });
+    } else if (parsedUrl.pathname === '/api/whatsapp_queue') {
+        res.writeHead(200);
+        res.end(JSON.stringify({ success: true, queue: whatsappQueue }));
+    } else if (parsedUrl.pathname === '/api/whatsapp_sent' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const { id } = JSON.parse(body);
+                whatsappQueue = whatsappQueue.filter(item => item.id !== id);
+                saveWaQueue();
+                res.writeHead(200);
+                res.end(JSON.stringify({ success: true }));
+            } catch (e) {
+                res.writeHead(400);
+                res.end(JSON.stringify({ success: false, error: 'Bad request' }));
+            }
         });
     } else if (parsedUrl.pathname === '/health') {
         res.writeHead(200);

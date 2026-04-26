@@ -392,13 +392,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const refPagoMovil = document.getElementById('ref-pagomovil');
     const refBinance = document.getElementById('ref-binance');
+    const whatsappNumber = document.getElementById('whatsapp-number');
+    const countryCode = document.getElementById('country-code');
 
     refPagoMovil.addEventListener('input', (e) => {
         let val = e.target.value.replace(/\D/g, ''); // Eliminar todo lo que no sea número
-        // Si pegan o escriben más de 4 dígitos, nos quedamos con los últimos 4
-        if (val.length > 4) {
-            val = val.slice(-4);
-        }
+        if (val.length > 4) val = val.slice(-4);
         e.target.value = val;
         checkFinishButton();
     });
@@ -408,21 +407,28 @@ document.addEventListener('DOMContentLoaded', () => {
         checkFinishButton();
     });
 
+    whatsappNumber.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, ''); // Solo números
+        checkFinishButton();
+    });
+
     function checkFinishButton() {
         const valPago = refPagoMovil.value.trim();
         const valBinance = refBinance.value.trim();
-        
-        console.log(`[DEBUG] Método: ${selectedMethod} | Ref PagoM: ${valPago} | Ref Binance: ${valBinance}`);
+        const waNum = whatsappNumber.value.trim();
 
+        let methodOk = false;
         if (selectedMethod === 'pagomovil' && valPago.length >= 4) {
-            finishBtn.disabled = false;
+            methodOk = true;
         } else if (selectedMethod === 'binance' && valBinance.length >= 1) {
+            methodOk = true;
+        }
+        
+        if (methodOk && waNum.length >= 7) {
             finishBtn.disabled = false;
         } else {
             finishBtn.disabled = true;
         }
-        
-        console.log(`[DEBUG] Botón Confirmar: ${finishBtn.disabled ? 'DESACTIVADO' : 'ACTIVADO'}`);
     }
 
     backBtn.addEventListener('click', () => {
@@ -436,6 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const packText = `${selectedPackage.amount} + ${selectedPackage.bonus}`;
         const priceUSDT = parseFloat(document.querySelector('.package-card.selected').dataset.price);
         const priceBS = (priceUSDT * DOLAR_RATE).toFixed(2);
+        const waFull = countryCode.value + whatsappNumber.value.trim();
 
         Swal.fire({
             title: 'Procesando pago...',
@@ -454,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         try {
-            const messageParams = `uid=${playerInput.value}&name=${encodeURIComponent(name)}&pack=${encodeURIComponent(packText)}&method=${selectedMethod}&ref=${encodeURIComponent(ref)}&price=${priceUSDT}USDT/${priceBS}Bs`;
+            const messageParams = `uid=${playerInput.value}&name=${encodeURIComponent(name)}&pack=${encodeURIComponent(packText)}&method=${selectedMethod}&ref=${encodeURIComponent(ref)}&price=${priceUSDT}USDT/${priceBS}Bs&wa=${waFull}`;
             const notifyUrl = `${SERVER_URL}/notificar?${messageParams}`;
             
             const notifyRes = await fetch(notifyUrl);
