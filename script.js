@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || !hostname;
     const isTunnel = hostname.includes('loca.lt');
     
-    const SERVER_URL = isTunnel ? window.location.origin : (isLocal ? 'http://localhost:3500' : 'https://ff-verificador.onrender.com');
+    const SERVER_URL = isLocal ? 'http://localhost:3500' : window.location.origin;
 
     const playerInput = document.getElementById('player-id');
     const verifyBtn = document.getElementById('verify-btn');
