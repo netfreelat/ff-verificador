@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
             --primary: #9D00FF;
@@ -201,6 +202,14 @@
             <!-- Cargado por JS -->
         </div>
 
+        <!-- WhatsApp Bot Status -->
+        <div class="action-card" style="margin-bottom: 20px; text-align: center;">
+            <h2 style="justify-content: center;"><i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> Bot de WhatsApp (VPS)</h2>
+            <p style="font-size: 1.2rem; font-weight: 600; margin-bottom: 15px;">Estado: <span id="wa-status-text" style="color: var(--text-gray);">Cargando...</span></p>
+            <div id="wa-qr-container" style="display: none; background: white; padding: 15px; border-radius: 10px; width: 230px; height: 230px; margin: 0 auto;"></div>
+            <p id="wa-qr-help" style="display: none; color: #aaa; margin-top: 15px; font-size: 0.9rem;">Escanea este código con tu celular para conectar el bot de notificaciones.</p>
+        </div>
+
         <!-- Agregar Pines -->
         <div class="action-card">
             <h2><i class="fa-solid fa-plus-circle" style="color: var(--primary);"></i> Agregar Nuevos Pines</h2>
@@ -295,6 +304,52 @@
         });
 
         loadStats();
+
+        // Lógica de WhatsApp Bot
+        let currentQR = '';
+        let qrCodeObj = null;
+
+        async function checkWaStatus() {
+            try {
+                const res = await fetch(`${SERVER_URL}/api/wa_status`);
+                const data = await res.json();
+                
+                const statusEl = document.getElementById('wa-status-text');
+                const qrContainer = document.getElementById('wa-qr-container');
+                const qrHelp = document.getElementById('wa-qr-help');
+
+                statusEl.innerText = data.status;
+                
+                if (data.status === 'Conectado') {
+                    statusEl.style.color = '#25D366'; // Verde
+                    qrContainer.style.display = 'none';
+                    qrHelp.style.display = 'none';
+                } else if (data.status === 'Esperando QR') {
+                    statusEl.style.color = '#FFC107'; // Amarillo
+                    qrContainer.style.display = 'block';
+                    qrHelp.style.display = 'block';
+                    
+                    if (data.qr && data.qr !== currentQR) {
+                        currentQR = data.qr;
+                        qrContainer.innerHTML = ''; // Limpiar anterior
+                        qrCodeObj = new QRCode(qrContainer, {
+                            text: data.qr,
+                            width: 200,
+                            height: 200
+                        });
+                    }
+                } else {
+                    statusEl.style.color = '#ff4b2b'; // Rojo
+                    qrContainer.style.display = 'none';
+                    qrHelp.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('Error cargando estado WA:', e);
+            }
+        }
+
+        setInterval(checkWaStatus, 3000);
+        checkWaStatus();
     </script>
 </body>
 </html>

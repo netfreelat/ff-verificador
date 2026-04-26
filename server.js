@@ -16,9 +16,10 @@ const WA_QUEUE_FILE = path.join(__dirname, 'wa_queue.json');
 // Cargar persistencia
 let recentReloads = [];
 let orders = {};
-let users = {};
 let pines = { "100": [], "310": [], "520": [], "1060": [], "2180": [], "5600": [] };
 let whatsappQueue = [];
+let waBotStatus = 'Desconectado'; // 'Desconectado', 'Esperando QR', 'Conectado'
+let waBotQR = '';
 
 try {
     if (fs.existsSync(RECIENTES_FILE)) {
@@ -679,6 +680,24 @@ const server = http.createServer((req, res) => {
             } catch (e) {
                 res.writeHead(400);
                 res.end(JSON.stringify({ success: false, error: 'Bad request' }));
+            }
+        });
+    } else if (parsedUrl.pathname === '/api/wa_status') {
+        res.writeHead(200);
+        res.end(JSON.stringify({ status: waBotStatus, qr: waBotQR }));
+    } else if (parsedUrl.pathname === '/api/wa_status_update' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                if (data.status !== undefined) waBotStatus = data.status;
+                if (data.qr !== undefined) waBotQR = data.qr;
+                res.writeHead(200);
+                res.end(JSON.stringify({ success: true }));
+            } catch (e) {
+                res.writeHead(400);
+                res.end(JSON.stringify({ success: false }));
             }
         });
     } else if (parsedUrl.pathname === '/health') {
