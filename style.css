@@ -906,32 +906,32 @@ body::before {
     }
 
     .packages-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
         margin-bottom: 20px;
     }
 
     .package-card {
-        padding: 12px 8px;
+        padding: 8px 4px;
         text-align: center;
     }
 
     .package-card .diamond-icon {
-        font-size: 1.2rem;
-        margin-bottom: 5px;
+        font-size: 1rem;
+        margin-bottom: 3px;
     }
 
     .package-card .amount {
-        font-size: 0.9rem;
+        font-size: 0.75rem;
         display: block;
     }
 
     .package-card .price-usdt {
-        font-size: 0.85rem;
+        font-size: 0.7rem;
     }
 
     .package-card .price-bs {
-        font-size: 1rem;
+        font-size: 0.85rem;
         font-weight: 800;
     }
 
