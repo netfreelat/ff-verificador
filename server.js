@@ -529,11 +529,14 @@ const server = http.createServer((req, res) => {
                 // Intentar recarga (prioridad pines para canje)
                 const pin = getFallbackPin(pack);
                 if (pin) {
-                    user.points -= cost;
+                    const pointsBefore = Number(user.points);
+                    user.points = pointsBefore - cost;
                     saveUsers();
+                    console.log(`[CANJE] ✅ ÉXITO: Usuario ${uid} canjeó ${cost} puntos. Balance: ${pointsBefore} -> ${user.points}`);
                     res.writeHead(200);
                     res.end(JSON.stringify({ success: true, pin: pin, message: '¡Canje exitoso!' }));
                 } else {
+                    console.log(`[CANJE] ❌ FALLO: No hay pines para el paquete ${pack}`);
                     res.writeHead(400);
                     res.end(JSON.stringify({ success: false, message: 'No hay pines disponibles para canje en este momento' }));
                 }
