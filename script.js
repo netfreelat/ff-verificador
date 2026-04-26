@@ -393,9 +393,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const refPagoMovil = document.getElementById('ref-pagomovil');
     const refBinance = document.getElementById('ref-binance');
 
-    [refPagoMovil, refBinance].forEach(input => {
-        input.addEventListener('input', checkFinishButton);
+    refPagoMovil.addEventListener('input', (e) => {
+        let val = e.target.value.trim();
+        // Si pegan o escriben más de 4 dígitos, nos quedamos con los últimos 4
+        if (val.length > 4) {
+            e.target.value = val.slice(-4);
+        }
+        checkFinishButton();
     });
+
+    refBinance.addEventListener('input', checkFinishButton);
 
     function checkFinishButton() {
         const valPago = refPagoMovil.value.trim();
