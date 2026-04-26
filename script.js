@@ -239,8 +239,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const marquee = document.getElementById('marquee-content');
             
             if (data && data.length > 0) {
-                const text = data.map(r => `✅ ${r.name} recargó ${r.pack} diamantes`).join(' | ');
-                marquee.innerText = ` ÚLTIMAS RECARGAS: ${text} | ¡Únete a los miles de jugadores que confían en nosotros! `;
+                const text = data.map(r => {
+                    if (r.type === 'canje') {
+                        return `🎁 ${r.name} CANJEÓ ${r.pack} diamantes con sus puntos!`;
+                    }
+                    return `✅ ${r.name} recargó ${r.pack} diamantes`;
+                }).join(' | ');
+                marquee.innerText = ` ÚLTIMAS ACTIVIDADES: ${text} | ¡Únete a los miles de jugadores que confían en nosotros! `;
             } else {
                 marquee.innerText = " ¡BIENVENIDOS A RECARGAS FREE FIRE! – Verifica tu ID y selecciona tu paquete de diamantes preferido. ";
             }

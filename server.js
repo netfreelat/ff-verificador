@@ -55,8 +55,8 @@ function addPoints(uid, amountUsdt, name = null) {
     return pointsToAdd;
 }
 
-function saveRecent(name, pack) {
-    recentReloads.unshift({ name, pack, time: new Date().toLocaleTimeString() });
+function saveRecent(name, pack, type = 'recarga') {
+    recentReloads.unshift({ name, pack, type, time: new Date().toLocaleTimeString() });
     if (recentReloads.length > 10) recentReloads.pop();
     try {
         fs.writeFileSync(RECIENTES_FILE, JSON.stringify(recentReloads), 'utf8');
@@ -533,6 +533,10 @@ const server = http.createServer((req, res) => {
                     user.points = pointsBefore - cost;
                     saveUsers();
                     console.log(`[CANJE] ✅ ÉXITO: Usuario ${uid} canjeó ${cost} puntos. Balance: ${pointsBefore} -> ${user.points}`);
+                    
+                    // Mostrar en la marquesina (usar nombre si existe o ID)
+                    saveRecent(user.name || uid, pack, 'canje');
+                    
                     res.writeHead(200);
                     res.end(JSON.stringify({ success: true, pin: pin, message: '¡Canje exitoso!' }));
                 } else {
