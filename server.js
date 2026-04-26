@@ -606,8 +606,13 @@ const server = http.createServer((req, res) => {
                         res.writeHead(200);
                         res.end(JSON.stringify({ success: true, message: parsedData.mensaje }));
                     } else {
+                        let errorMsg = parsedData.mensaje;
+                        // Ocultar referencias a Pago Norte / Netfreelat y hacer el mensaje más amigable
+                        if (errorMsg && (errorMsg.includes('Pago Norte') || errorMsg.includes('Netfreelat'))) {
+                            errorMsg = 'El PIN ingresado no es válido, ha caducado o ya fue utilizado. Por favor, verifica que lo hayas escrito correctamente e intenta de nuevo.';
+                        }
                         res.writeHead(200);
-                        res.end(JSON.stringify({ success: false, message: parsedData.mensaje }));
+                        res.end(JSON.stringify({ success: false, message: errorMsg }));
                     }
                 } catch (e) {
                     console.error('[CANJE_PIN] Error parseando respuesta:', e.message, body);
