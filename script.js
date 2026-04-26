@@ -394,15 +394,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const refBinance = document.getElementById('ref-binance');
 
     refPagoMovil.addEventListener('input', (e) => {
-        let val = e.target.value.trim();
+        let val = e.target.value.replace(/\D/g, ''); // Eliminar todo lo que no sea número
         // Si pegan o escriben más de 4 dígitos, nos quedamos con los últimos 4
         if (val.length > 4) {
-            e.target.value = val.slice(-4);
+            val = val.slice(-4);
         }
+        e.target.value = val;
         checkFinishButton();
     });
 
-    refBinance.addEventListener('input', checkFinishButton);
+    refBinance.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, ''); // Solo números
+        checkFinishButton();
+    });
 
     function checkFinishButton() {
         const valPago = refPagoMovil.value.trim();
