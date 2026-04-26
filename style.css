@@ -137,6 +137,73 @@ body::before {
     text-align: center;
 }
 
+.header-actions {
+    position: fixed;
+    top: 50px; /* Debajo del banner fijo */
+    right: 20px;
+    z-index: 900;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-login-header {
+    background: rgba(157, 0, 255, 0.2);
+    border: 1px solid var(--primary);
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-login-header:hover {
+    background: var(--primary);
+    box-shadow: 0 0 15px var(--primary);
+}
+
+.user-info-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 5px 5px 15px;
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-points {
+    color: #ffd700;
+    font-weight: 800;
+    font-size: 0.9rem;
+}
+
+.btn-logout-header {
+    background: rgba(255, 75, 43, 0.2);
+    border: none;
+    color: #ff4b2b;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 600px) {
+    .header-actions {
+        top: 45px;
+        right: 10px;
+    }
+}
+
 .logo-container {
     margin-bottom: 30px;
 }

@@ -71,7 +71,82 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Manejar Favoritos
+    // --- LÓGICA DE CUENTA ---
+    const loginTriggerBtn = document.getElementById('login-trigger-btn');
+    const userDisplay = document.getElementById('user-display');
+    const headerPointsVal = document.getElementById('header-points-val');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    const updateAccountUI = (id) => {
+        if (id) {
+            loginTriggerBtn.style.display = 'none';
+            userDisplay.style.display = 'flex';
+            loadUserPoints(id).then(points => {
+                headerPointsVal.innerText = points;
+            });
+        } else {
+            loginTriggerBtn.style.display = 'flex';
+            userDisplay.style.display = 'none';
+        }
+    };
+
+    // Auto-login al cargar
+    const savedId = localStorage.getItem('ff_user_id');
+    if (savedId) updateAccountUI(savedId);
+
+    loginTriggerBtn.addEventListener('click', async () => {
+        const { value: id } = await Swal.fire({
+            title: 'Ingresar a mi Cuenta',
+            input: 'text',
+            inputLabel: 'Ingresa tu ID de Free Fire',
+            inputPlaceholder: 'Ej: 12345678',
+            showCancelButton: true,
+            confirmButtonText: 'Entrar',
+            cancelButtonText: 'Cancelar',
+            background: 'rgba(20, 10, 35, 0.98)',
+            color: '#fff',
+            inputAttributes: {
+                autocapitalize: 'off',
+                autocorrect: 'off'
+            }
+        });
+
+        if (id) {
+            Swal.fire({
+                title: 'Verificando...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            const name = await checkPlayerId(id);
+            if (name) {
+                localStorage.setItem('ff_user_id', id);
+                updateAccountUI(id);
+                Swal.fire({
+                    icon: 'success',
+                    title: `¡Bienvenido, ${name}!`,
+                    text: 'Ya puedes acumular puntos con tus recargas.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                playerInput.value = id;
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ID no encontrado',
+                    text: 'Asegúrate de que el ID sea correcto.'
+                });
+            }
+        }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('ff_user_id');
+        updateAccountUI(null);
+        location.reload();
+    });
+    // --- FIN LÓGICA DE CUENTA ---
+
     favoritesBtn.addEventListener('click', () => {
         const favorites = JSON.parse(localStorage.getItem('ff_favorites') || '[]');
         if (favorites.length === 0) {
@@ -225,7 +300,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const welcomeSection = document.getElementById('welcome-section');
                 document.getElementById('player-name-display').innerText = playerName;
-                welcomeSection.style.display = 'block';
+                // Auto-login si no estaba logueado
+            localStorage.setItem('ff_user_id', playerInput.value);
+            updateAccountUI(playerInput.value);
+
+            welcomeSection.style.display = 'block';
 
                 // Cargar puntos del usuario
                 loadUserPoints(uid);
