@@ -517,8 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                          `📅 *Fecha:* ${fullDateTime}\n` +
                                          `✅ *Estado:* ${statusText}\n` +
                                          `------------------------------------------\n` +
-                                         `¡Gracias por tu compra! 🎮\n` +
-                                         `🔗 https://ff-verificador.onrender.com`;
+                                         `¡Gracias por tu compra! 🎮`;
 
                         if (navigator.share) {
                             navigator.share({
