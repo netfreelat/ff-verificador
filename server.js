@@ -174,17 +174,20 @@ const server = http.createServer((req, res) => {
         let currentHostIndex = 0;
 
         const attemptRequest = (hostname) => {
-            const apiPath = `/redeem/conexion_api/api.php?action=ValidarParametros&id=${encodeURIComponent(uid)}`;
+            const apiPath = `/redeem/conexion_api/api.php`;
+            const postData = `action=ValidarParametros&id=${encodeURIComponent(uid)}`;
             
             const options = {
                 hostname: hostname,
                 path: apiPath,
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
                     'Referer': `https://${hostname}/redeem/`,
                     'Accept': 'application/json, text/javascript, */*; q=0.01',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Length': Buffer.byteLength(postData)
                 },
                 timeout: 10000
             };
@@ -233,6 +236,7 @@ const server = http.createServer((req, res) => {
                 apiReq.destroy();
                 handleError(new Error('Timeout'), hostname);
             });
+            apiReq.write(postData);
             apiReq.end();
         };
 
