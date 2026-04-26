@@ -344,10 +344,15 @@ const server = http.createServer((req, res) => {
                     const chatId = callbackQuery.message.chat.id;
                     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
                     
+                    if (!BOT_TOKEN) {
+                        console.error('[WEBHOOK] ❌ ERROR: TELEGRAM_BOT_TOKEN no está configurado en las variables de entorno de Render.');
+                        return res.end('Token missing');
+                    }
+
                     const [action, ref] = data.split('|');
                     const order = orders[ref];
                     
-                    console.log(`[WEBHOOK] Acción: ${action} | Ref: ${ref}`);
+                    console.log(`[WEBHOOK] 🖱️ CLIC RECIBIDO: Acción=${action} | Ref=${ref} | User=${callbackQuery.from.username || callbackQuery.from.id}`);
 
                     // 1. Responder INMEDIATAMENTE a Telegram para quitar el "relojito"
                     const answerPayload = JSON.stringify({ 
@@ -362,7 +367,10 @@ const server = http.createServer((req, res) => {
                             'Content-Type': 'application/json',
                             'Content-Length': Buffer.byteLength(answerPayload)
                         }
+                    }, (ansRes) => {
+                        console.log(`[WEBHOOK] Telegram respondió a answerCallbackQuery: ${ansRes.statusCode}`);
                     });
+                    answerReq.on('error', (err) => console.error('[WEBHOOK] ❌ Error enviando answerCallbackQuery:', err.message));
                     answerReq.write(answerPayload);
                     answerReq.end();
 
