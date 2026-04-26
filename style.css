@@ -974,7 +974,33 @@ body::before {
     }
 
     .btn-action {
-        padding: 10px;
-        font-size: 1rem;
+        padding: 8px;
+        font-size: 0.9rem;
+    }
+
+    .btn-share, .btn-fav {
+        width: 45px;
+    }
+
+    .btn-continue-receipt {
+        white-space: nowrap;
+        font-size: 0.85rem;
+    }
+
+    .receipt-info p {
+        margin: 5px 0;
+        padding-bottom: 5px;
+    }
+
+    .receipt-success-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+
+    .receipt-title {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
     }
 }
