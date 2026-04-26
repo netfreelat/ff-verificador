@@ -888,3 +888,66 @@ body::before {
     letter-spacing: 1px;
     box-shadow: 0 4px 15px rgba(157, 0, 255, 0.4);
 }
+
+/* Mobile Optimizations */
+@media (max-width: 600px) {
+    .card {
+        padding: 20px;
+        margin: 10px;
+        border-radius: 20px;
+    }
+
+    .logo-container h1 {
+        font-size: 1.8rem;
+    }
+
+    .logo-container p {
+        font-size: 0.8rem;
+    }
+
+    .packages-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .package-card {
+        padding: 15px 10px;
+    }
+
+    .package-card .amount {
+        font-size: 1rem;
+    }
+
+    .package-card .price {
+        font-size: 1.1rem;
+    }
+
+    .main-container.expanded {
+        max-width: 100%;
+    }
+
+    .btn-primary, .btn-secondary-outline, .whatsapp-btn {
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+
+    .secondary-actions {
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .secondary-actions button {
+        font-size: 0.75rem;
+        padding: 10px 5px;
+    }
+
+    /* Modal adjustments */
+    .swal2-popup {
+        width: 95% !important;
+        padding: 15px !important;
+    }
+
+    .receipt-info {
+        padding: 15px;
+    }
+}
