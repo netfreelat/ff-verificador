@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canje de Pines - Free Fire</title>
+    <meta name="description" content="Canjea tus pines de diamantes de Free Fire de manera rápida y segura.">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+
+<body>
+    <!-- BARRA INFORMATIVA -->
+    <div class="top-banner">
+        <div class="marquee">
+            <i class="fa-solid fa-bullhorn"></i>
+            <span id="marquee-content">¡Bienvenido al Centro de Canje de Pines! Verifica tu ID y canjea tu código al instante.</span>
+        </div>
+    </div>
+
+    <div class="header-actions">
+        <a href="index.html" class="btn-login-header" style="text-decoration: none;">
+            <i class="fa-solid fa-house"></i> Volver a la Tienda
+        </a>
+    </div>
+
+    <div class="main-container">
+        <div class="card">
+            <div class="logo-container">
+                <h1>CANJE DE PINES</h1>
+                <p>FREE FIRE</p>
+            </div>
+
+            <!-- Paso 1: Validar ID -->
+            <div id="step-1">
+                <div class="input-group">
+                    <input type="text" id="player-id" placeholder="Ingresa ID del Jugador" autocomplete="off" inputmode="numeric">
+                </div>
+
+                <button id="verify-btn" class="btn-primary">
+                    <i class="fa-solid fa-magnifying-glass"></i> Consultar ID
+                </button>
+            </div>
+
+            <!-- Paso 2: Canjear PIN -->
+            <div id="step-2" style="display: none;">
+                <div class="welcome-container" style="padding: 15px; margin-bottom: 20px;">
+                    <div class="welcome-icon"><i class="fa-solid fa-gamepad"></i></div>
+                    <p>Jugador Verificado</p>
+                    <h2 id="player-name-display" style="font-size: 1.4rem;">Nombre del Jugador</h2>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" id="pin-input" placeholder="Ingresa el código del PIN" autocomplete="off" style="text-transform: uppercase; font-family: monospace; letter-spacing: 2px; text-align: center;">
+                </div>
+
+                <button id="redeem-pin-btn" class="btn-primary" style="background: linear-gradient(135deg, #00c853, #009624);">
+                    <i class="fa-solid fa-gift"></i> Canjear Diamantes
+                </button>
+
+                <button id="change-id-btn" class="btn-change-id" style="margin-top: 15px;">
+                    <i class="fa-solid fa-rotate-left"></i> Cambiar ID
+                </button>
+            </div>
+
+            <div class="footer-text">
+                <p>Compatible con todas las regiones de Free Fire</p>
+                <p style="margin-top: 15px;">Desarrollado con ❤️ para la comunidad</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hostname = window.location.hostname;
+            const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || !hostname;
+            const SERVER_URL = isLocal ? 'http://localhost:3500' : window.location.origin;
+
+            const playerIdInput = document.getElementById('player-id');
+            const verifyBtn = document.getElementById('verify-btn');
+            const step1 = document.getElementById('step-1');
+            const step2 = document.getElementById('step-2');
+            const playerNameDisplay = document.getElementById('player-name-display');
+            const pinInput = document.getElementById('pin-input');
+            const redeemPinBtn = document.getElementById('redeem-pin-btn');
+            const changeIdBtn = document.getElementById('change-id-btn');
+
+            // Formato de inputs
+            playerIdInput.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+
+            playerIdInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') verifyBtn.click();
+            });
+
+            pinInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') redeemPinBtn.click();
+            });
+
+            // Verificar ID
+            verifyBtn.addEventListener('click', async () => {
+                const uid = playerIdInput.value.trim();
+                if (!uid) {
+                    Swal.fire({ icon: 'warning', title: 'Campo Vacío', text: 'Ingresa un ID.', background: 'rgba(20, 10, 35, 0.95)', color: '#fff' });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Validando ID...',
+                    html: `
+                        <div class="ff-loader-container">
+                            <div class="ff-loader-text">Conectando con servidores...</div>
+                            <div class="ff-progress-bar"><div class="ff-progress-fill"></div></div>
+                        </div>
+                    `,
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    background: 'rgba(20, 10, 35, 0.95)',
+                    color: '#fff'
+                });
+
+                try {
+                    const response = await fetch(`${SERVER_URL}/verificar?uid=${uid}`);
+                    const data = await response.json();
+
+                    if (data.success && data.nombre) {
+                        Swal.close();
+                        playerNameDisplay.innerText = data.nombre;
+                        step1.style.display = 'none';
+                        step2.style.display = 'block';
+                        pinInput.focus();
+                    } else {
+                        throw new Error(data.mensaje || 'Jugador no encontrado');
+                    }
+                } catch (error) {
+                    Swal.fire({ 
+                        icon: 'error', 
+                        title: 'Error de Verificación', 
+                        text: error.message || 'ID NO ENCONTRADO EN GARENA.', 
+                        background: 'rgba(20, 10, 35, 0.95)',
+                        color: '#fff'
+                    });
+                }
+            });
+
+            // Volver
+            changeIdBtn.addEventListener('click', () => {
+                step2.style.display = 'none';
+                step1.style.display = 'block';
+                pinInput.value = '';
+                playerIdInput.focus();
+            });
+
+            // Canjear PIN
+            redeemPinBtn.addEventListener('click', async () => {
+                const uid = playerIdInput.value.trim();
+                const pin = pinInput.value.trim();
+
+                if (!pin) {
+                    Swal.fire({ icon: 'warning', title: 'Campo Vacío', text: 'Ingresa el PIN.', background: 'rgba(20, 10, 35, 0.95)', color: '#fff' });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Procesando Canje...',
+                    html: `
+                        <div class="ff-loader-container">
+                            <div class="ff-loader-text">Enviando a Netfreelat...</div>
+                            <div class="ff-progress-bar"><div class="ff-progress-fill"></div></div>
+                        </div>
+                    `,
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    background: 'rgba(20, 10, 35, 0.95)',
+                    color: '#fff'
+                });
+
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/redeem_pin?uid=${uid}&pin=${encodeURIComponent(pin)}`);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ffd700', '#00c853', '#ffffff'] });
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡CANJE EXITOSO!',
+                            html: `<p style="color: #fff;">${data.message}</p>`,
+                            background: 'rgba(20, 10, 35, 0.95)',
+                            color: '#fff',
+                            confirmButtonColor: '#00c853'
+                        }).then(() => {
+                            pinInput.value = '';
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de Canje',
+                            html: `<p style="color: #fff;">${data.message}</p>`,
+                            background: 'rgba(20, 10, 35, 0.95)',
+                            color: '#fff',
+                            confirmButtonColor: '#ff4b2b'
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de Red',
+                        text: 'No se pudo conectar con el servidor de canje.',
+                        background: 'rgba(20, 10, 35, 0.95)',
+                        color: '#fff'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

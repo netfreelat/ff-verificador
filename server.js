@@ -572,6 +572,50 @@ const server = http.createServer((req, res) => {
                 res.end(JSON.stringify({ error: 'Error procesando canje' }));
             }
         });
+    } else if (parsedUrl.pathname === '/api/redeem_pin') {
+        const uid = parsedUrl.searchParams.get('uid');
+        const pin = parsedUrl.searchParams.get('pin');
+        
+        if (!uid || !pin) {
+            res.writeHead(400);
+            return res.end(JSON.stringify({ success: false, message: 'Falta el ID o el PIN' }));
+        }
+
+        console.log(`[CANJE_PIN] Intentando canjear PIN ${pin} para ID: ${uid}`);
+
+        const apiUrl = `https://netfreelat.net/redeem/conexion_api/api.php?action=canjefreeFire&id=${encodeURIComponent(uid)}&pin=${encodeURIComponent(pin)}`;
+
+        https.get(apiUrl, (apiRes) => {
+            let body = '';
+            apiRes.on('data', chunk => body += chunk);
+            apiRes.on('end', () => {
+                try {
+                    let data = body.trim();
+                    if (data.startsWith('"') && data.endsWith('"')) {
+                        data = data.substring(1, data.length - 1).replace(/\\"/g, '"');
+                    }
+                    const parsedData = JSON.parse(data);
+                    
+                    if (parsedData.alerta === 'green') {
+                        // Guardar en recientes
+                        saveRecent(uid, 'Diamantes', 'canje');
+                        res.writeHead(200);
+                        res.end(JSON.stringify({ success: true, message: parsedData.mensaje }));
+                    } else {
+                        res.writeHead(200);
+                        res.end(JSON.stringify({ success: false, message: parsedData.mensaje }));
+                    }
+                } catch (e) {
+                    console.error('[CANJE_PIN] Error parseando respuesta:', e.message, body);
+                    res.writeHead(500);
+                    res.end(JSON.stringify({ success: false, message: 'Error procesando la respuesta del proveedor.' }));
+                }
+            });
+        }).on('error', (err) => {
+            console.error('[CANJE_PIN] Error conectando a Netfreelat:', err.message);
+            res.writeHead(500);
+            res.end(JSON.stringify({ success: false, message: 'Error de conexión con el proveedor.' }));
+        });
     } else if (parsedUrl.pathname === '/health') {
         res.writeHead(200);
         res.end(JSON.stringify({ status: 'ok' }));
