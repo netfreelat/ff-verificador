@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loginTriggerBtn.style.display = 'none';
             userDisplay.style.display = 'flex';
             loadUserPoints(id).then(points => {
-                headerPointsVal.innerText = points;
+                headerPointsVal.innerText = points || 0;
             });
         } else {
             loginTriggerBtn.style.display = 'flex';
@@ -695,11 +695,18 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch(`${SERVER_URL}/perfil?uid=${uid}`);
             const data = await res.json();
-            if (data.success) {
-                document.getElementById('user-points').innerText = data.user.points;
-            }
+            const points = (data.success && data.user) ? (data.user.points || 0) : 0;
+            
+            const pointsEl = document.getElementById('user-points');
+            const headerPointsEl = document.getElementById('header-points-val');
+            
+            if (pointsEl) pointsEl.innerText = points;
+            if (headerPointsEl) headerPointsEl.innerText = points;
+            
+            return points;
         } catch (e) {
             console.error('Error cargando puntos:', e);
+            return 0;
         }
     }
 
