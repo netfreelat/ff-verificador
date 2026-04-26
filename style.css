@@ -66,15 +66,13 @@ body::before {
 
 /* Top Banner */
 .top-banner {
-    position: absolute;
-    top: 0;
-    left: 0;
+    position: relative;
     width: 100%;
     background: linear-gradient(90deg, rgba(157, 0, 255, 0.7), rgba(0, 240, 255, 0.7));
     backdrop-filter: blur(10px);
     color: #FFF;
-    padding: 12px 0;
-    font-size: 0.95rem;
+    padding: 8px 0;
+    font-size: 0.8rem;
     font-family: 'Montserrat', sans-serif;
     font-weight: 600;
     letter-spacing: 1px;
