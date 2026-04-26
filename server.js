@@ -350,7 +350,7 @@ const server = http.createServer((req, res) => {
                     }
 
                     const [action, ref] = data.split('|');
-                    const order = orders[ref];
+                    let order = orders[ref];
                     
                     console.log(`[WEBHOOK] 🖱️ CLIC RECIBIDO: Acción=${action} | Ref=${ref} | User=${callbackQuery.from.username || callbackQuery.from.id}`);
 
@@ -374,9 +374,30 @@ const server = http.createServer((req, res) => {
                     answerReq.write(answerPayload);
                     answerReq.end();
 
+                    // Si Render se durmió, orders[ref] estará vacío. Lo recuperamos del texto del mensaje.
                     if (!order) {
-                        console.error(`[WEBHOOK] Pedido no encontrado para ref: ${ref}`);
-                        return res.end('Order not found');
+                        console.log(`[WEBHOOK] Pedido no encontrado en memoria. Intentando recuperar del texto del mensaje...`);
+                        const text = callbackQuery.message.text || '';
+                        
+                        const uidMatch = text.match(/ID:\s*(\d+)/);
+                        const nameMatch = text.match(/Jugador:\s*(.+)/);
+                        const packMatch = text.match(/Paquete:\s*(.+)/);
+                        const priceMatch = text.match(/Total:\s*(.+)/);
+                        
+                        if (uidMatch && packMatch) {
+                            orders[ref] = {
+                                uid: uidMatch[1].trim(),
+                                name: nameMatch ? nameMatch[1].trim() : 'Desconocido',
+                                pack: packMatch[1].trim(),
+                                price: priceMatch ? priceMatch[1].trim() : '0USDT',
+                                status: 'pending'
+                            };
+                            order = orders[ref];
+                            console.log(`[WEBHOOK] Pedido recuperado con éxito:`, order);
+                        } else {
+                            console.error(`[WEBHOOK] No se pudo recuperar el pedido para ref: ${ref}`);
+                            return res.end('Order not found');
+                        }
                     }
 
                     let newText = '';
@@ -412,7 +433,9 @@ const server = http.createServer((req, res) => {
                                     addPoints(order.uid, usdtPrice, order.name);
                                 }
                             } else {
-                                newText = `⚠️ *FALLÓ RECARGA Y NO HAY PINES*\n\n👤 *Jugador:* ${order.name}\n🆔 *ID:* ${order.uid}\n❌ *Error API:* ${result.message}\n\n_Revisa el panel de Netfreelat o carga pines._`;
+                                // Limpiamos caracteres que rompen el Markdown de Telegram en el mensaje de error
+                                const safeErrorMsg = result.message.replace(/[_*[\]()~`>#+-=|{}.!]/g, ' ');
+                                newText = `⚠️ *FALLÓ RECARGA Y NO HAY PINES*\n\n👤 *Jugador:* ${order.name}\n🆔 *ID:* ${order.uid}\n❌ *Error API:* ${safeErrorMsg}\n\n_Revisa el panel de Netfreelat o carga pines._`;
                             }
                         }
                     } else {
