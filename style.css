@@ -960,23 +960,54 @@ body::before {
 /* Mobile Optimizations */
 @media (max-width: 600px) {
     .card {
-        padding: 20px;
-        margin: 10px;
-        border-radius: 20px;
+        padding: 15px;
+        margin: 5px;
+        border-radius: 15px;
+    }
+
+    .logo-container {
+        margin-bottom: 15px;
     }
 
     .logo-container h1 {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
+        margin-bottom: 5px;
     }
 
     .logo-container p {
+        font-size: 0.75rem;
+    }
+
+    .welcome-container {
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+
+    .welcome-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0;
+    }
+
+    .welcome-container h2 {
+        font-size: 1.3rem;
+    }
+
+    .points-badge {
+        margin-top: 8px;
+        margin-bottom: 8px;
+        padding: 4px 10px;
         font-size: 0.8rem;
+    }
+
+    .section-title {
+        margin: 15px 0 10px;
+        font-size: 1rem;
     }
 
     .packages-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-        margin-bottom: 20px;
+        gap: 6px;
+        margin-bottom: 15px;
     }
 
     .package-card {
@@ -1003,7 +1034,41 @@ body::before {
         font-weight: 800;
     }
 
+    .payment-methods {
+        gap: 8px;
+        margin-bottom: 10px;
+    }
 
+    .payment-method-card {
+        padding: 8px;
+        gap: 5px;
+    }
+
+    .payment-method-card i {
+        font-size: 1.2rem;
+    }
+
+    .payment-method-card span {
+        font-size: 0.85rem;
+    }
+
+    .info-box {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .input-group {
+        margin-bottom: 12px;
+    }
+
+    .input-group input {
+        padding: 12px 15px;
+        font-size: 1rem;
+    }
+
+    .buy-btn, #finish-btn {
+        margin-top: 10px !important;
+    }
     .main-container.expanded {
         max-width: 100%;
     }
