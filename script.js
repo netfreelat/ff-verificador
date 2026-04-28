@@ -679,7 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let textToCopy = '';
         if (method === 'pagomovil') {
             const amount = document.getElementById('amount-pagomovil').value.replace(' Bs', '').trim();
-            textToCopy = `0174 04243790757 17716286 ${amount}`;
+            textToCopy = `0105 04123491068 17716286 ${amount}`;
         } else if (method === 'binance') {
             const amount = document.getElementById('amount-binance').value.replace(' USDT', '').trim();
             textToCopy = `198080894 ${amount}`;
