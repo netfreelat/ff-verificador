@@ -272,7 +272,35 @@ function processPendingOrder(inputFullRef, inputShortRef) {
     return false;
 }
 
-const server = http.createServer((req, res) => {
+// --- LIMPIADOR AUTOMÁTICO DE PEDIDOS (Cada 1 minuto) ---
+setInterval(() => {
+    const NOW = new Date();
+    let changed = false;
+
+    for (let ref in orders) {
+        if (orders[ref].status === 'pending') {
+            const orderTime = new Date(orders[ref].time);
+            const diffMinutes = (NOW - orderTime) / (1000 * 60);
+
+            if (diffMinutes > 5) {
+                console.log(`[AUTO-CLEAN] Rechazando pedido ${ref} por inactividad (5+ min).`);
+                orders[ref].status = 'rejected';
+                changed = true;
+            }
+        }
+    }
+
+    if (changed) {
+        try {
+            fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
+        } catch (e) {
+            console.error('Error al guardar limpieza:', e);
+        }
+    }
+}, 60000); // Se ejecuta cada 60 segundos
+// ------------------------------------------------------
+
+const server = http.createServer(async (req, res) => {
     // Permisos CORS para que el panel admin y la web funcionen
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
