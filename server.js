@@ -608,41 +608,51 @@ const server = http.createServer((req, res) => {
                 res.end('Error');
             }
         });
+    } else if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
     } else if (parsedUrl.pathname === '/webhook/notificacion' && req.method === 'POST') {
         let body = '';
         req.on('data', chunk => body += chunk);
         req.on('end', () => {
             try {
+                console.log(`\n[DEBUG-WEBHOOK] Datos recibidos: ${body}`);
                 const data = JSON.parse(body);
                 const text = data.text || '';
                 
-                console.log(`\n[WEBHOOK-APP] Recibida notificación del celular: "${text}"`);
+                if (!text) {
+                    console.log('[DEBUG-WEBHOOK] ❌ Texto vacío.');
+                    res.writeHead(200);
+                    return res.end('Empty');
+                }
+
+                console.log(`[DEBUG-WEBHOOK] Procesando: "${text}"`);
                 
-                // Extraer de Mercantil: "Tpago recibido Bs. 5,00 del 04243790757 Ref 190371677512"
                 let refMatch = text.match(/Ref\s*(\d+)/i);
                 let amountMatch = text.match(/Bs\.\s*([\d,.]+)/i);
 
                 if (refMatch && amountMatch) {
                     const ref = refMatch[1];
-                    const amountStr = amountMatch[1].replace(/\./g, '').replace(',', '.'); // "5,00" -> "5.00"
+                    const amountStr = amountMatch[1].replace(/\./g, '').replace(',', '.');
                     const amount = parseFloat(amountStr);
 
+                    console.log(`[DEBUG-WEBHOOK] ✅ Ref: ${ref}, Monto: ${amount}`);
+
                     if (!pagosValidados[ref]) {
-                        console.log(`[WEBHOOK-APP] ✅ PAGO DETECTADO: Ref ${ref} | Monto Bs. ${amount}`);
                         pagosValidados[ref] = { amount, time: new Date().toISOString(), used: false };
                         savePagos();
-                        
-                        // Intentar aprobar si el usuario ya llenó el formulario
-                        processPendingOrder(ref, null);
                     }
+                    // Intentar procesar siempre (por si acaso)
+                    processPendingOrder(ref, null);
                 } else {
-                    console.log(`[WEBHOOK-APP] ⚠️ El texto no parece ser un pago válido de Mercantil.`);
+                    console.log(`[DEBUG-WEBHOOK] ⚠️ Formato no reconocido.`);
                 }
                 
                 res.writeHead(200);
                 res.end(JSON.stringify({ success: true }));
             } catch (e) {
-                console.error('[WEBHOOK-APP] Error:', e.message);
+                console.error('[DEBUG-WEBHOOK] ❌ Error:', e.message);
                 res.writeHead(400);
                 res.end('Error');
             }
