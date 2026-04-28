@@ -629,28 +629,32 @@ const server = http.createServer((req, res) => {
 
                 console.log(`[DEBUG-WEBHOOK] Procesando: "${text}"`);
                 
-                let refMatch = text.match(/Ref\s*(\d+)/i);
-                let amountMatch = text.match(/Bs\.\s*([\d,.]+)/i);
+                // Buscador súper flexible: busca la palabra Ref o Referencia y el número que le sigue
+                let refMatch = text.match(/(?:Ref|Referencia)\s*:?\s*(\d+)/i);
+                // Buscador de monto: busca Bs o Bs. y el número (manejando comas y puntos)
+                let amountMatch = text.match(/Bs\.?\s*([\d,.]+)/i);
 
                 if (refMatch && amountMatch) {
                     const ref = refMatch[1];
-                    const amountStr = amountMatch[1].replace(/\./g, '').replace(',', '.');
+                    // Limpiar monto: quitar puntos de miles y cambiar coma por punto decimal
+                    let amountRaw = amountMatch[1];
+                    let amountStr = amountRaw.replace(/\./g, '').replace(',', '.');
                     const amount = parseFloat(amountStr);
 
-                    console.log(`[DEBUG-WEBHOOK] ✅ Ref: ${ref}, Monto: ${amount}`);
+                    console.log(`[DEBUG-WEBHOOK] ✅ ÉXITO EXTRAYENDO -> Ref: ${ref}, Monto: ${amount}`);
 
                     if (!pagosValidados[ref]) {
                         pagosValidados[ref] = { amount, time: new Date().toISOString(), used: false };
                         savePagos();
                     }
-                    // Intentar procesar siempre (por si acaso)
+                    // Intentar procesar siempre
                     processPendingOrder(ref, null);
                 } else {
-                    console.log(`[DEBUG-WEBHOOK] ⚠️ Formato no reconocido.`);
+                    console.log(`[DEBUG-WEBHOOK] ⚠️ No se pudo extraer datos. Texto recibido: "${text}"`);
                 }
                 
                 res.writeHead(200);
-                res.end(JSON.stringify({ success: true }));
+                res.end(JSON.stringify({ success: true, detected_ref: refMatch ? refMatch[1] : null }));
             } catch (e) {
                 console.error('[DEBUG-WEBHOOK] ❌ Error:', e.message);
                 res.writeHead(400);
