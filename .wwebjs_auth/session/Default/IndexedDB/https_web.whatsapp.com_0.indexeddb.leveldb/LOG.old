@@ -1,0 +1,55 @@
+2026/04/26-09:36:31.381 45e0 Creating DB C:\Users\juanm\Documents\solo para verificar id de free fire\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb since it was missing.
+2026/04/26-09:36:31.404 45e0 Reusing MANIFEST C:\Users\juanm\Documents\solo para verificar id de free fire\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/04/26-09:38:01.908 54dc Level-0 table #5: started
+2026/04/26-09:38:01.949 54dc Level-0 table #5: 998301 bytes OK
+2026/04/26-09:38:01.954 54dc Delete type=0 #3
+2026/04/26-09:38:05.223 45e0 Level-0 table #7: started
+2026/04/26-09:38:05.262 45e0 Level-0 table #7: 1320883 bytes OK
+2026/04/26-09:38:05.265 45e0 Delete type=0 #4
+2026/04/26-09:38:05.273 45e0 Compacting 1@1 + 1@2 files
+2026/04/26-09:38:05.345 45e0 Generated table #8@1: 26386 keys, 1257511 bytes
+2026/04/26-09:38:05.345 45e0 Compacted 1@1 + 1@2 files => 1257511 bytes
+2026/04/26-09:38:05.348 45e0 compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/04/26-09:38:05.349 45e0 Delete type=2 #5
+2026/04/26-09:38:05.349 45e0 Delete type=2 #7
+2026/04/26-09:38:09.295 45e0 Level-0 table #10: started
+2026/04/26-09:38:09.338 45e0 Level-0 table #10: 1214589 bytes OK
+2026/04/26-09:38:09.342 45e0 Delete type=0 #6
+2026/04/26-09:38:09.348 54dc Compacting 1@1 + 1@2 files
+2026/04/26-09:38:09.418 54dc Generated table #11@1: 35583 keys, 1858451 bytes
+2026/04/26-09:38:09.418 54dc Compacted 1@1 + 1@2 files => 1858451 bytes
+2026/04/26-09:38:09.421 54dc compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/04/26-09:38:12.389 45e0 Level-0 table #13: started
+2026/04/26-09:38:12.432 45e0 Level-0 table #13: 1068101 bytes OK
+2026/04/26-09:38:12.437 45e0 Delete type=2 #8
+2026/04/26-09:38:12.437 45e0 Delete type=0 #9
+2026/04/26-09:38:12.437 45e0 Delete type=2 #10
+2026/04/26-09:38:12.860 45e0 Compacting 1@1 + 1@2 files
+2026/04/26-09:38:12.940 45e0 Generated table #14@1: 40292 keys, 2194840 bytes
+2026/04/26-09:38:12.948 45e0 Generated table #15@1: 1968 keys, 105186 bytes
+2026/04/26-09:38:12.948 45e0 Compacted 1@1 + 1@2 files => 2300026 bytes
+2026/04/26-09:38:12.950 45e0 compacted to: files[ 0 0 2 0 0 0 0 ]
+2026/04/26-09:38:12.951 45e0 Delete type=2 #11
+2026/04/26-09:38:12.951 45e0 Delete type=2 #13
+2026/04/26-09:38:54.568 45e0 Level-0 table #17: started
+2026/04/26-09:38:54.710 45e0 Level-0 table #17: 1063172 bytes OK
+2026/04/26-09:38:54.715 45e0 Delete type=0 #12
+2026/04/26-09:38:54.817 54dc Compacting 1@1 + 2@2 files
+2026/04/26-09:38:55.125 54dc Generated table #18@1: 46000 keys, 2196591 bytes
+2026/04/26-09:38:55.199 54dc Generated table #19@1: 6687 keys, 459236 bytes
+2026/04/26-09:38:55.200 54dc Compacted 1@1 + 2@2 files => 2655827 bytes
+2026/04/26-09:38:55.201 54dc compacted to: files[ 0 0 2 0 0 0 0 ]
+2026/04/26-09:43:21.281 45e0 Level-0 table #21: started
+2026/04/26-09:43:21.371 45e0 Level-0 table #21: 1167455 bytes OK
+2026/04/26-09:43:21.384 45e0 Delete type=2 #14
+2026/04/26-09:43:21.384 45e0 Delete type=2 #15
+2026/04/26-09:43:21.384 45e0 Delete type=0 #16
+2026/04/26-09:43:21.385 45e0 Delete type=2 #17
+2026/04/26-09:43:21.418 45e0 Compacting 1@1 + 2@2 files
+2026/04/26-09:43:21.653 45e0 Generated table #22@1: 51943 keys, 2201182 bytes
+2026/04/26-09:43:21.719 45e0 Generated table #23@1: 7801 keys, 786728 bytes
+2026/04/26-09:43:21.719 45e0 Compacted 1@1 + 2@2 files => 2987910 bytes
+2026/04/26-09:43:21.720 45e0 compacted to: files[ 0 0 2 0 0 0 0 ]
+2026/04/26-09:43:21.721 45e0 Delete type=2 #18
+2026/04/26-09:43:21.722 45e0 Delete type=2 #19
+2026/04/26-09:43:21.722 45e0 Delete type=2 #21

@@ -12,6 +12,7 @@ const RECIENTES_FILE = path.join(__dirname, 'recientes.json');
 const ORDERS_FILE = path.join(__dirname, 'pedidos.json');
 const USERS_FILE = path.join(__dirname, 'usuarios.json');
 const WA_QUEUE_FILE = path.join(__dirname, 'wa_queue.json');
+const PAGOS_FILE = path.join(__dirname, 'pagos_recibidos.json');
 
 // Cargar persistencia
 let recentReloads = [];
@@ -20,6 +21,7 @@ let pines = { "100": [], "310": [], "520": [], "1060": [], "2180": [], "5600": [
 let whatsappQueue = [];
 let waBotStatus = 'Desconectado'; // 'Desconectado', 'Esperando QR', 'Conectado'
 let waBotQR = '';
+let pagosValidados = {};
 
 try {
     if (fs.existsSync(RECIENTES_FILE)) {
@@ -37,8 +39,15 @@ try {
     if (fs.existsSync(WA_QUEUE_FILE)) {
         whatsappQueue = JSON.parse(fs.readFileSync(WA_QUEUE_FILE, 'utf8'));
     }
+    if (fs.existsSync(PAGOS_FILE)) {
+        pagosValidados = JSON.parse(fs.readFileSync(PAGOS_FILE, 'utf8'));
+    }
 } catch (e) {
     console.error('Error cargando persistencia:', e);
+}
+
+function savePagos() {
+    try { fs.writeFileSync(PAGOS_FILE, JSON.stringify(pagosValidados), 'utf8'); } catch (e) {}
 }
 
 function saveWaQueue() {
@@ -172,6 +181,52 @@ function getFallbackPin(amount) {
     return null;
 }
 
+function processPendingOrder(ref) {
+    const order = orders[ref];
+    if (order && order.status === 'pending') {
+        const pago = pagosValidados[ref];
+        if (pago && !pago.used) {
+            console.log(`[AUTO-APPROVE] Pago válido encontrado para ref ${ref}. Aprobando recarga...`);
+            pagosValidados[ref].used = true;
+            savePagos();
+            
+            // Reutilizar la lógica de aprobación
+            rechargeViaNetfreelat(order, ref).then(result => {
+                if (result.success) {
+                    orders[ref].status = 'approved';
+                    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
+                    saveRecent(order.name, order.pack);
+                    const usdtPrice = parseFloat(order.price.split('USDT')[0]);
+                    if (!isNaN(usdtPrice)) {
+                        addPoints(order.uid, usdtPrice, order.name);
+                    }
+                    queueWhatsAppMessage(order, true);
+                    console.log(`[AUTO-APPROVE] Recarga exitosa para ${order.uid}`);
+                } else {
+                    // Fallback pines
+                    const pin = getFallbackPin(order.pack);
+                    if (pin) {
+                        orders[ref].status = 'approved';
+                        orders[ref].pin = pin;
+                        fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
+                        saveRecent(order.name, order.pack);
+                        const usdtPrice = parseFloat(order.price.split('USDT')[0]);
+                        if (!isNaN(usdtPrice)) {
+                            addPoints(order.uid, usdtPrice, order.name);
+                        }
+                        queueWhatsAppMessage(order, true, pin);
+                        console.log(`[AUTO-APPROVE] Recarga exitosa (PIN) para ${order.uid}`);
+                    } else {
+                        console.error(`[AUTO-APPROVE] Falló recarga y no hay pines para ${order.uid}`);
+                    }
+                }
+            });
+            return true;
+        }
+    }
+    return false;
+}
+
 const server = http.createServer((req, res) => {
     // Permisos CORS para que el panel admin y la web funcionen
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -299,6 +354,14 @@ const server = http.createServer((req, res) => {
             fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
         } catch (e) {
             console.error('Error guardando pedidos:', e);
+        }
+
+        // Intentar auto-aprobar si el pago ya llegó al correo
+        const autoApproved = processPendingOrder(ref);
+        if (autoApproved) {
+            console.log(`[NOTIFICACIÓN] Pedido ${ref} fue AUTO-APROBADO por correo.`);
+            res.writeHead(200);
+            return res.end(JSON.stringify({ success: true, info: 'Pedido auto-aprobado instantáneamente' }));
         }
 
         // --- CONFIGURACIÓN DE TELEGRAM ---
@@ -516,6 +579,45 @@ const server = http.createServer((req, res) => {
                 res.end('OK');
             } catch (e) {
                 console.error('[WEBHOOK] Error procesando body:', e);
+                res.writeHead(400);
+                res.end('Error');
+            }
+        });
+    } else if (parsedUrl.pathname === '/webhook/notificacion' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                const text = data.text || '';
+                
+                console.log(`\n[WEBHOOK-APP] Recibida notificación del celular: "${text}"`);
+                
+                // Extraer de Mercantil: "Tpago recibido Bs. 5,00 del 04243790757 Ref 190371677512"
+                let refMatch = text.match(/Ref\s*(\d+)/i);
+                let amountMatch = text.match(/Bs\.\s*([\d,.]+)/i);
+
+                if (refMatch && amountMatch) {
+                    const ref = refMatch[1];
+                    const amountStr = amountMatch[1].replace(/\./g, '').replace(',', '.'); // "5,00" -> "5.00"
+                    const amount = parseFloat(amountStr);
+
+                    if (!pagosValidados[ref]) {
+                        console.log(`[WEBHOOK-APP] ✅ PAGO DETECTADO: Ref ${ref} | Monto Bs. ${amount}`);
+                        pagosValidados[ref] = { amount, time: new Date().toISOString(), used: false };
+                        savePagos();
+                        
+                        // Intentar aprobar si el usuario ya llenó el formulario
+                        processPendingOrder(ref);
+                    }
+                } else {
+                    console.log(`[WEBHOOK-APP] ⚠️ El texto no parece ser un pago válido de Mercantil.`);
+                }
+                
+                res.writeHead(200);
+                res.end(JSON.stringify({ success: true }));
+            } catch (e) {
+                console.error('[WEBHOOK-APP] Error:', e.message);
                 res.writeHead(400);
                 res.end('Error');
             }

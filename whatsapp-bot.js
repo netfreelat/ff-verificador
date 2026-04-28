@@ -101,6 +101,12 @@ async function sendMessage(item) {
         const numberId = `${item.number}@c.us`;
         
         console.log(`[WHATSAPP] Enviando mensaje a ${item.number}...`);
+        
+        // Verificamos si el cliente está listo
+        if (!client || !client.pupPage) {
+            throw new Error('El navegador de WhatsApp no está listo todavía.');
+        }
+
         await client.sendMessage(numberId, item.message);
         console.log(`[WHATSAPP] ✅ Mensaje enviado a ${item.number}`);
         
@@ -111,6 +117,7 @@ async function sendMessage(item) {
         await new Promise(resolve => setTimeout(resolve, 3000));
     } catch (error) {
         console.error(`[WHATSAPP] ❌ Error enviando a ${item.number}:`, error.message);
+        // Si el error es crítico, podríamos intentar reiniciar el intervalo después
     }
 }
 
