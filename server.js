@@ -181,19 +181,45 @@ function getFallbackPin(amount) {
     return null;
 }
 
-function processPendingOrder(ref) {
-    const order = orders[ref];
-    if (order && order.status === 'pending') {
-        const pago = pagosValidados[ref];
+function processPendingOrder(inputFullRef, inputShortRef) {
+    let targetFullRef = inputFullRef;
+    let targetShortRef = inputShortRef;
+
+    // Caso A: Viene del Banco (tenemos FullRef, buscamos ShortRef en pedidos)
+    if (targetFullRef && !targetShortRef) {
+        for (let sRef in orders) {
+            if (orders[sRef].status === 'pending' && targetFullRef.endsWith(sRef)) {
+                targetShortRef = sRef;
+                break;
+            }
+        }
+    }
+
+    // Caso B: Viene del Usuario (tenemos ShortRef, buscamos FullRef en pagos recibidos)
+    if (targetShortRef && !targetFullRef) {
+        for (let fRef in pagosValidados) {
+            if (!pagosValidados[fRef].used && fRef.endsWith(targetShortRef)) {
+                targetFullRef = fRef;
+                break;
+            }
+        }
+    }
+
+    // Si encontramos ambos, procedemos a aprobar
+    if (targetFullRef && targetShortRef && orders[targetShortRef] && orders[targetShortRef].status === 'pending') {
+        const order = orders[targetShortRef];
+        const pago = pagosValidados[targetFullRef];
+        
         if (pago && !pago.used) {
-            console.log(`[AUTO-APPROVE] Pago válido encontrado para ref ${ref}. Aprobando recarga...`);
-            pagosValidados[ref].used = true;
+            console.log(`[AUTO-APPROVE] ¡CONEXIÓN EXITOSA!`);
+            console.log(`[AUTO-APPROVE] Ref Banco: ${targetFullRef} <--> Ref Formulario: ${targetShortRef}`);
+            
+            pagosValidados[targetFullRef].used = true;
             savePagos();
             
-            // Reutilizar la lógica de aprobación
-            rechargeViaNetfreelat(order, ref).then(result => {
+            rechargeViaNetfreelat(order, targetShortRef).then(result => {
                 if (result.success) {
-                    orders[ref].status = 'approved';
+                    orders[targetShortRef].status = 'approved';
                     fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
                     saveRecent(order.name, order.pack);
                     const usdtPrice = parseFloat(order.price.split('USDT')[0]);
@@ -203,11 +229,10 @@ function processPendingOrder(ref) {
                     queueWhatsAppMessage(order, true);
                     console.log(`[AUTO-APPROVE] Recarga exitosa para ${order.uid}`);
                 } else {
-                    // Fallback pines
                     const pin = getFallbackPin(order.pack);
                     if (pin) {
-                        orders[ref].status = 'approved';
-                        orders[ref].pin = pin;
+                        orders[targetShortRef].status = 'approved';
+                        orders[targetShortRef].pin = pin;
                         fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
                         saveRecent(order.name, order.pack);
                         const usdtPrice = parseFloat(order.price.split('USDT')[0]);
@@ -217,7 +242,7 @@ function processPendingOrder(ref) {
                         queueWhatsAppMessage(order, true, pin);
                         console.log(`[AUTO-APPROVE] Recarga exitosa (PIN) para ${order.uid}`);
                     } else {
-                        console.error(`[AUTO-APPROVE] Falló recarga y no hay pines para ${order.uid}`);
+                        console.error(`[AUTO-APPROVE] Error en recarga automática.`);
                     }
                 }
             });
@@ -356,8 +381,8 @@ const server = http.createServer((req, res) => {
             console.error('Error guardando pedidos:', e);
         }
 
-        // Intentar auto-aprobar si el pago ya llegó al correo
-        const autoApproved = processPendingOrder(ref);
+        // Intentar auto-aprobar si el pago ya llegó previamente
+        const autoApproved = processPendingOrder(null, ref);
         if (autoApproved) {
             console.log(`[NOTIFICACIÓN] Pedido ${ref} fue AUTO-APROBADO por correo.`);
             res.writeHead(200);
@@ -608,7 +633,7 @@ const server = http.createServer((req, res) => {
                         savePagos();
                         
                         // Intentar aprobar si el usuario ya llenó el formulario
-                        processPendingOrder(ref);
+                        processPendingOrder(ref, null);
                     }
                 } else {
                     console.log(`[WEBHOOK-APP] ⚠️ El texto no parece ser un pago válido de Mercantil.`);
