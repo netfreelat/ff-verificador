@@ -205,48 +205,68 @@ function processPendingOrder(inputFullRef, inputShortRef) {
         }
     }
 
-    // Si encontramos ambos, procedemos a aprobar
+    // Si encontramos ambos, procedemos a validar el monto y aprobar
     if (targetFullRef && targetShortRef && orders[targetShortRef] && orders[targetShortRef].status === 'pending') {
         const order = orders[targetShortRef];
         const pago = pagosValidados[targetFullRef];
         
         if (pago && !pago.used) {
-            console.log(`[AUTO-APPROVE] ¡CONEXIÓN EXITOSA!`);
-            console.log(`[AUTO-APPROVE] Ref Banco: ${targetFullRef} <--> Ref Formulario: ${targetShortRef}`);
-            
-            pagosValidados[targetFullRef].used = true;
-            savePagos();
-            
-            rechargeViaNetfreelat(order, targetShortRef).then(result => {
-                if (result.success) {
-                    orders[targetShortRef].status = 'approved';
-                    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
-                    saveRecent(order.name, order.pack);
-                    const usdtPrice = parseFloat(order.price.split('USDT')[0]);
-                    if (!isNaN(usdtPrice)) {
-                        addPoints(order.uid, usdtPrice, order.name);
-                    }
-                    queueWhatsAppMessage(order, true);
-                    console.log(`[AUTO-APPROVE] Recarga exitosa para ${order.uid}`);
-                } else {
-                    const pin = getFallbackPin(order.pack);
-                    if (pin) {
+            // Extraer precio esperado en Bs: "1.00USDT/635.00Bs" -> 635.00
+            let expectedBs = 0;
+            try {
+                const parts = order.price.split('/');
+                if (parts[1]) {
+                    expectedBs = parseFloat(parts[1].replace('Bs', '').trim());
+                }
+            } catch (e) {
+                console.error('[AUTO-APPROVE] Error extrayendo precio esperado:', e.message);
+            }
+
+            console.log(`[AUTO-APPROVE] Validando monto -> Recibido: ${pago.amount} Bs | Esperado: ${expectedBs} Bs`);
+
+            // Validación de seguridad: El pago debe ser igual o mayor al esperado (con margen de 0.50 Bs)
+            if (pago.amount >= (expectedBs - 0.50)) {
+                console.log(`[AUTO-APPROVE] ✅ MONTO CORRECTO. Procediendo...`);
+                console.log(`[AUTO-APPROVE] Ref Banco: ${targetFullRef} <--> Ref Formulario: ${targetShortRef}`);
+                
+                pagosValidados[targetFullRef].used = true;
+                savePagos();
+                
+                rechargeViaNetfreelat(order, targetShortRef).then(result => {
+                    if (result.success) {
                         orders[targetShortRef].status = 'approved';
-                        orders[targetShortRef].pin = pin;
                         fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
                         saveRecent(order.name, order.pack);
                         const usdtPrice = parseFloat(order.price.split('USDT')[0]);
                         if (!isNaN(usdtPrice)) {
                             addPoints(order.uid, usdtPrice, order.name);
                         }
-                        queueWhatsAppMessage(order, true, pin);
-                        console.log(`[AUTO-APPROVE] Recarga exitosa (PIN) para ${order.uid}`);
+                        queueWhatsAppMessage(order, true);
+                        console.log(`[AUTO-APPROVE] Recarga exitosa para ${order.uid}`);
                     } else {
-                        console.error(`[AUTO-APPROVE] Error en recarga automática.`);
+                        const pin = getFallbackPin(order.pack);
+                        if (pin) {
+                            orders[targetShortRef].status = 'approved';
+                            orders[targetShortRef].pin = pin;
+                            fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
+                            saveRecent(order.name, order.pack);
+                            const usdtPrice = parseFloat(order.price.split('USDT')[0]);
+                            if (!isNaN(usdtPrice)) {
+                                addPoints(order.uid, usdtPrice, order.name);
+                            }
+                            queueWhatsAppMessage(order, true, pin);
+                            console.log(`[AUTO-APPROVE] Recarga exitosa (PIN) para ${order.uid}`);
+                        } else {
+                            console.error(`[AUTO-APPROVE] Error en recarga automática.`);
+                        }
                     }
-                }
-            });
-            return true;
+                });
+                return true;
+            } else {
+                console.log(`[AUTO-APPROVE] ❌ MONTO INSUFICIENTE. El pago de ${pago.amount} Bs es menor a lo esperado (${expectedBs} Bs).`);
+                // No marcamos como usado para que el admin pueda decidir qué hacer
+                return false;
+            }
         }
     }
     return false;
