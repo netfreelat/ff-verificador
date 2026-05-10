@@ -1,57 +1,140 @@
 require('dotenv').config();
 const http = require('http');
 const https = require('https');
-
-const PORT = process.env.PORT || 3500;
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
+const { createClient } = require('@supabase/supabase-js');
 
-const PINES_FILE = path.join(__dirname, 'pines.json');
-const RECIENTES_FILE = path.join(__dirname, 'recientes.json');
-const ORDERS_FILE = path.join(__dirname, 'pedidos.json');
-const USERS_FILE = path.join(__dirname, 'usuarios.json');
-const WA_QUEUE_FILE = path.join(__dirname, 'wa_queue.json');
-const PAGOS_FILE = path.join(__dirname, 'pagos_recibidos.json');
+const PORT = process.env.PORT || 3500;
 
-// Cargar persistencia
+// --- Supabase ---
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_KEY
+);
+
+const BDV_TOKEN = process.env.BDV_TOKEN;
+const BDV_PASSWORD = process.env.BDV_PASSWORD;
+const BDV_API_URL = 'https://apicentral.pro/apis/movimientos_bdv.jsp';
+
+async function verifyBDVPayment(montoReportado, referencia4) {
+    try {
+        const urlStr = `${BDV_API_URL}?token=${BDV_TOKEN}&password=${encodeURIComponent(BDV_PASSWORD)}`;
+        const response = await new Promise((resolve, reject) => {
+            https.get(urlStr, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => resolve(JSON.parse(data)));
+            }).on('error', reject);
+        });
+
+        if (response.alerta !== 'green' || !Array.isArray(response.movimientos)) return { success: false, pending: true };
+
+        const match = response.movimientos.find(m => {
+            if (m.tipo !== 'credito') return false;
+            const montoMov = parseFloat(m.monto.replace(/\./g, '').replace(',', '.'));
+            const refMov = String(m.referencia || '').slice(-4);
+            return Math.abs(montoMov - montoReportado) < 1 && refMov === referencia4;
+        });
+
+        return match ? { success: true, movimiento: match } : { success: false, pending: true };
+    } catch (e) {
+        console.error('[BDV] Error:', e);
+        return { success: false, pending: true };
+    }
+}
+
+// --- Estado en memoria (cache) ---
 let recentReloads = [];
 let orders = {};
 let pines = { "100": [], "310": [], "520": [], "1060": [], "2180": [], "5600": [] };
 let whatsappQueue = [];
-let waBotStatus = 'Desconectado'; // 'Desconectado', 'Esperando QR', 'Conectado'
+let waBotStatus = 'Desconectado';
 let waBotQR = '';
 let pagosValidados = {};
+let users = {};
+let settings = {
+    tasa_del_dia: 635.00,
+    barra_informativa: "🔥 ¡Bienvenidos a Diamond Center! 💎",
+    precios: {
+        "100":  { "usdt": 1.00,  "label": "100 + 10 Diamantes" },
+        "310":  { "usdt": 3.10,  "label": "310 + 31 Diamantes" },
+        "520":  { "usdt": 5.20,  "label": "520 + 52 Diamantes" },
+        "1060": { "usdt": 10.60, "label": "1060 + 106 Diamantes" },
+        "2180": { "usdt": 21.80, "label": "2180 + 218 Diamantes" },
+        "5600": { "usdt": 56.00, "label": "5600 + 560 Diamantes" }
+    },
+    admin: { username: "admin", password: "123" },
+    metodos_pago: { pagomovil: { banco: "", telefono: "", cedula: "" }, binance: { id: "", nombre: "" } },
+    whatsapp: { soporte: "", canal: "" }
+};
 
-try {
-    if (fs.existsSync(RECIENTES_FILE)) {
-        recentReloads = JSON.parse(fs.readFileSync(RECIENTES_FILE, 'utf8'));
+// --- Carga inicial desde Supabase ---
+async function loadFromSupabase() {
+    try {
+        // Usuarios
+        const { data: usersData } = await supabase.from('ff_users').select('*');
+        if (usersData) {
+            usersData.forEach(u => { users[u.uid] = { name: u.name, points: u.points, password: u.password, registered: u.registered, referred_by: u.referred_by }; });
+        }
+
+        // Pedidos
+        const { data: ordersData } = await supabase.from('ff_orders').select('*');
+        if (ordersData) {
+            ordersData.forEach(o => { orders[o.ref] = { uid: o.uid, login_uid: o.login_uid, name: o.name, pack: o.pack, method: o.method, price: o.price, status: o.status, time: o.time, wa: o.wa, pin: o.pin, telegram_msg_id: o.telegram_msg_id }; });
+        }
+
+        // Pines
+        const { data: pinesData } = await supabase.from('ff_pines').select('*').eq('used', false);
+        if (pinesData) {
+            pines = { "100": [], "310": [], "520": [], "1060": [], "2180": [], "5600": [] };
+            pinesData.forEach(p => { if (pines[p.amount]) pines[p.amount].push(p.code); });
+        }
+
+        // Recientes
+        const { data: recData } = await supabase.from('ff_recientes').select('*').order('created_at', { ascending: false }).limit(10);
+        if (recData) recentReloads = recData.map(r => ({ name: r.name, pack: r.pack, type: r.type, time: r.time }));
+
+        // Cola WA
+        const { data: waData } = await supabase.from('ff_wa_queue').select('*').eq('sent', false);
+        if (waData) whatsappQueue = waData.map(w => ({ id: w.id, number: w.number, message: w.message }));
+
+        // Pagos validados
+        const { data: pagosData } = await supabase.from('ff_pagos_recibidos').select('*');
+        if (pagosData) pagosData.forEach(p => { pagosValidados[p.ref] = { amount: p.amount, date: p.date, used: p.used }; });
+
+        // Settings
+        const { data: settData } = await supabase.from('ff_settings').select('*').eq('id', 1).single();
+        if (settData) {
+            settings = {
+                tasa_del_dia: settData.tasa_del_dia,
+                barra_informativa: settData.barra_informativa,
+                precios: settData.precios || settings.precios,
+                admin: { username: settData.admin_username, password: settData.admin_password },
+                metodos_pago: settData.metodos_pago || settings.metodos_pago,
+                whatsapp: settData.whatsapp_config || settings.whatsapp
+            };
+        }
+
+        console.log('[SUPABASE] ✅ Datos cargados:', Object.keys(users).length, 'usuarios,', Object.keys(orders).length, 'pedidos');
+    } catch (e) {
+        console.error('[SUPABASE] ❌ Error cargando datos:', e.message);
     }
-    if (fs.existsSync(ORDERS_FILE)) {
-        orders = JSON.parse(fs.readFileSync(ORDERS_FILE, 'utf8'));
-    }
-    if (fs.existsSync(PINES_FILE)) {
-        pines = JSON.parse(fs.readFileSync(PINES_FILE, 'utf8'));
-    }
-    if (fs.existsSync(USERS_FILE)) {
-        users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-    }
-    if (fs.existsSync(WA_QUEUE_FILE)) {
-        whatsappQueue = JSON.parse(fs.readFileSync(WA_QUEUE_FILE, 'utf8'));
-    }
-    if (fs.existsSync(PAGOS_FILE)) {
-        pagosValidados = JSON.parse(fs.readFileSync(PAGOS_FILE, 'utf8'));
-    }
-} catch (e) {
-    console.error('Error cargando persistencia:', e);
 }
 
+
+
+
+
 function savePagos() {
-    try { fs.writeFileSync(PAGOS_FILE, JSON.stringify(pagosValidados), 'utf8'); } catch (e) {}
+    supabase.from('ff_pagos_recibidos').upsert(
+        Object.entries(pagosValidados).map(([ref, p]) => ({ ref, amount: p.amount, date: p.date, used: p.used }))
+    ).then(({ error }) => { if (error) console.error('[SUPABASE] Error guardando pagos:', error.message); });
 }
 
 function saveWaQueue() {
-    try { fs.writeFileSync(WA_QUEUE_FILE, JSON.stringify(whatsappQueue), 'utf8'); } catch (e) {}
+    // La cola WA se maneja individualmente al agregar/marcar como enviado
 }
 
 function queueWhatsAppMessage(order, isAccepted, pin = null) {
@@ -59,58 +142,71 @@ function queueWhatsAppMessage(order, isAccepted, pin = null) {
     
     let msg = '';
     if (isAccepted) {
-        msg = `💎 *RECIBO DE RECARGA - FREE FIRE* 💎\n\n✅ ¡Tu recarga ha sido APROBADA!\n\n👤 Jugador: ${order.name}\n🆔 ID: ${order.uid}\n📦 Paquete: ${order.pack}\n\nLos diamantes ya fueron enviados a tu cuenta.`;
-        if (pin) {
-            msg += `\n🔑 Tu PIN es: ${pin}`;
-        }
-        msg += `\n\n¡Gracias por tu compra!`;
+        msg = `🔥 *¡BOOYAH! RECARGA EXITOSA* 🔥\n\n` +
+              `¡Hola, *${order.name}*! Tu pedido de diamantes ha sido procesado con éxito. 🚀\n\n` +
+              `━━━━━━━━━━━━━━━\n` +
+              `👤 *Jugador:* ${order.name}\n` +
+              `🆔 *ID Garena:* ${order.uid}\n` +
+              `💎 *Paquete:* ${order.pack}\n` +
+              `━━━━━━━━━━━━━━━\n\n` +
+              `✅ *Estado:* ¡Diamantes Enviados! ✨`;
+        if (pin) msg += `\n\n🔑 *Tu Código PIN:* \`${pin}\`\n_(Canjéalo en el juego o nuestra web)_`;
+        msg += `\n\n¡Gracias por confiar en *Diamond Center*! 🎯🛡️`;
     } else {
-        msg = `❌ *RECARGA RECHAZADA*\n\nEstimado ${order.name}, tu recarga por el paquete de ${order.pack} no pudo ser procesada.\n\nMotivo: Referencia o monto incorrecto.\nSi crees que es un error, contacta a soporte.\n\nID: ${order.uid}`;
+        msg = `⚠️ *AVISO DE TU RECARGA* ⚠️\n\n` +
+              `Hola *${order.name}*, no pudimos procesar tu recarga de *${order.pack}*.\n\n` +
+              `❌ *Motivo:* Error en la verificación del pago.\n\n` +
+              `Envía captura de tu pago a soporte. 🛠️\n🆔 *ID:* ${order.uid}\n\n¡Estamos aquí para ayudarte! 🤝`;
     }
 
-    whatsappQueue.push({ id: Date.now().toString(), number: order.wa, message: msg });
-    saveWaQueue();
+    const waItem = { id: Date.now().toString(), number: order.wa, message: msg };
+    whatsappQueue.push(waItem);
+    supabase.from('ff_wa_queue').insert(waItem)
+        .then(({ error }) => { if (error) console.error('[SUPABASE] Error guardando WA queue:', error.message); });
 }
 
 function saveUsers() {
-    try {
-        fs.writeFileSync(USERS_FILE, JSON.stringify(users), 'utf8');
-    } catch (e) {
-        console.error('Error guardando usuarios:', e);
-    }
+    // No-op: se usa saveUser(uid) para guardar usuario individual
+}
+
+async function saveUser(uid) {
+    const u = users[uid];
+    if (!u) return;
+    const { error } = await supabase.from('ff_users').upsert({
+        uid, name: u.name, points: u.points, password: u.password || null,
+        registered: u.registered, referred_by: u.referred_by || null
+    });
+    if (error) console.error('[SUPABASE] Error guardando usuario:', error.message);
 }
 
 function addPoints(uid, amountUsdt, name = null) {
     if (!users[uid]) {
         users[uid] = { name: name || 'Jugador', points: 0, registered: new Date().toISOString() };
     }
-    const pointsToAdd = Math.floor(amountUsdt * 10); // 10 puntos por 1 USDT
+    const pointsToAdd = Math.floor(amountUsdt * 10);
     users[uid].points += pointsToAdd;
     if (name) users[uid].name = name;
-    saveUsers();
+    saveUser(uid);
     console.log(`[PUNTOS] Se añadieron ${pointsToAdd} puntos a ID: ${uid}. Total: ${users[uid].points}`);
     return pointsToAdd;
 }
 
 function saveRecent(name, pack, type = 'recarga') {
-    recentReloads.unshift({ name, pack, type, time: new Date().toLocaleTimeString() });
+    const entry = { name, pack, type, time: new Date().toLocaleTimeString() };
+    recentReloads.unshift(entry);
     if (recentReloads.length > 10) recentReloads.pop();
-    try {
-        fs.writeFileSync(RECIENTES_FILE, JSON.stringify(recentReloads), 'utf8');
-    } catch (e) {
-        console.error('Error guardando recientes:', e);
-    }
+    supabase.from('ff_recientes').insert(entry)
+        .then(({ error }) => { if (error) console.error('[SUPABASE] Error guardando reciente:', error.message); });
 }
 
 function updateOrderStatus(ref, status, pin = null) {
     if (orders[ref]) {
         orders[ref].status = status;
         if (pin) orders[ref].pin = pin;
-        try {
-            fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
-        } catch (e) {
-            console.error('Error actualizando pedido:', e);
-        }
+        const update = { status };
+        if (pin) update.pin = pin;
+        supabase.from('ff_orders').update(update).eq('ref', ref)
+            .then(({ error }) => { if (error) console.error('[SUPABASE] Error actualizando pedido:', error.message); });
     }
 }
 
@@ -181,6 +277,47 @@ function getFallbackPin(amount) {
     return null;
 }
 
+function updateTelegramStatus(ref) {
+    const order = orders[ref];
+    if (!order || !order.tg_message_id || !order.tg_chat_id) return;
+
+    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+    if (!BOT_TOKEN) return;
+
+    let newText = '';
+    if (order.status === 'approved') {
+        if (order.pin) {
+            newText = `🎟️ *RECARGA VÍA PIN (ADMIN)*\n\n👤 *Jugador:* ${order.name}\n🆔 *ID:* ${order.uid}\n🔑 *PIN:* \`${order.pin}\`\n\n✅ _Aprobado desde el panel administrativo._`;
+        } else {
+            newText = `✅ *RECARGA EXITOSA (ADMIN)*\n\n👤 *Jugador:* ${order.name}\n🆔 *ID:* ${order.uid}\n💎 *Paquete:* ${order.pack}\n\n✨ _Aprobado desde el panel administrativo._`;
+        }
+    } else if (order.status === 'rejected') {
+        newText = `❌ *PEDIDO RECHAZADO (ADMIN)*\n\n👤 *Jugador:* ${order.name}\n🆔 *ID:* ${order.uid}\n\n⚠️ _Rechazado desde el panel administrativo._`;
+    } else {
+        return; 
+    }
+
+    const editPayload = JSON.stringify({
+        chat_id: order.tg_chat_id,
+        message_id: order.tg_message_id,
+        text: newText,
+        parse_mode: 'Markdown'
+    });
+
+    const editReq = https.request({
+        hostname: 'api.telegram.org',
+        path: `/bot${BOT_TOKEN}/editMessageText`,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(editPayload)
+        }
+    });
+    editReq.on('error', (e) => console.error('[TG-EDIT] Error:', e.message));
+    editReq.write(editPayload);
+    editReq.end();
+}
+
 function processPendingOrder(inputFullRef, inputShortRef) {
     let targetFullRef = inputFullRef;
     let targetShortRef = inputShortRef;
@@ -241,9 +378,10 @@ function processPendingOrder(inputFullRef, inputShortRef) {
                         if (!isNaN(usdtPrice)) {
                             addPoints(order.uid, usdtPrice, order.name);
                         }
-                        queueWhatsAppMessage(order, true);
-                        console.log(`[AUTO-APPROVE] Recarga exitosa para ${order.uid}`);
-                    } else {
+                queueWhatsAppMessage(order, true);
+                updateTelegramStatus(targetShortRef);
+                console.log(`[AUTO-APPROVE] Recarga exitosa para ${order.uid}`);
+            } else {
                         const pin = getFallbackPin(order.pack);
                         if (pin) {
                             orders[targetShortRef].status = 'approved';
@@ -254,13 +392,14 @@ function processPendingOrder(inputFullRef, inputShortRef) {
                             if (!isNaN(usdtPrice)) {
                                 addPoints(order.uid, usdtPrice, order.name);
                             }
-                            queueWhatsAppMessage(order, true, pin);
-                            console.log(`[AUTO-APPROVE] Recarga exitosa (PIN) para ${order.uid}`);
-                        } else {
-                            console.error(`[AUTO-APPROVE] Error en recarga automática.`);
-                        }
-                    }
-                });
+                    queueWhatsAppMessage(order, true, pin);
+                    updateTelegramStatus(targetShortRef);
+                    console.log(`[AUTO-APPROVE] Recarga exitosa (PIN) para ${order.uid}`);
+                } else {
+                    console.error(`[AUTO-APPROVE] Error en recarga automática.`);
+                }
+            }
+        });
                 return true;
             } else {
                 console.log(`[AUTO-APPROVE] ❌ MONTO INSUFICIENTE. El pago de ${pago.amount} Bs es menor a lo esperado (${expectedBs} Bs).`);
@@ -411,6 +550,7 @@ const server = http.createServer(async (req, res) => {
 
     } else if (parsedUrl.pathname === '/notificar') {
         const uid = parsedUrl.searchParams.get('uid');
+        const login_uid = parsedUrl.searchParams.get('login_uid') || uid;
         const name = parsedUrl.searchParams.get('name');
         const pack = parsedUrl.searchParams.get('pack');
         const method = parsedUrl.searchParams.get('method');
@@ -422,12 +562,10 @@ const server = http.createServer(async (req, res) => {
         console.log(`[NOTIFICACIÓN] Referencia: ${ref} | Paquete: ${pack} | WA: ${wa}\n`);
 
         // Guardar pedido como pendiente
-        orders[ref] = { uid, name, pack, method, price, status: 'pending', time: new Date().toISOString(), wa: wa };
-        try {
-            fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
-        } catch (e) {
-            console.error('Error guardando pedidos:', e);
-        }
+        orders[ref] = { uid, login_uid, name, pack, method, price, status: 'pending', time: new Date().toISOString(), wa: wa };
+        supabase.from('ff_orders').insert({
+            ref, uid, login_uid, name, pack, method, price, status: 'pending', time: new Date().toISOString(), wa
+        }).then(({ error }) => { if (error) console.error('[SUPABASE] Error guardando pedido:', error.message); });
 
         // Intentar auto-aprobar si el pago ya llegó previamente
         const autoApproved = processPendingOrder(null, ref);
@@ -484,6 +622,16 @@ const server = http.createServer(async (req, res) => {
             let body = '';
             apiRes.on('data', chunk => body += chunk);
             apiRes.on('end', () => {
+                try {
+                    const result = JSON.parse(body);
+                    if (result.ok && result.result) {
+                        orders[ref].tg_message_id = result.result.message_id;
+                        orders[ref].tg_chat_id = result.result.chat.id;
+                        fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
+                    }
+                } catch (e) {
+                    console.error('[TG-NOTIF] Error guardando ID de mensaje:', e.message);
+                }
                 res.writeHead(200);
                 res.end(JSON.stringify({ success: true, info: 'Notificación enviada' }));
             });
@@ -582,10 +730,10 @@ const server = http.createServer(async (req, res) => {
                             fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
                             saveRecent(order.name, order.pack);
 
-                            // Sumar puntos
+                            // Sumar puntos al que inició sesión
                             const usdtPrice = parseFloat(order.price.split('USDT')[0]);
                             if (!isNaN(usdtPrice)) {
-                                addPoints(order.uid, usdtPrice, order.name);
+                                addPoints(order.login_uid || order.uid, usdtPrice, order.name);
                             }
                         } else {
                             // FALLBACK A PINES
@@ -602,7 +750,7 @@ const server = http.createServer(async (req, res) => {
                                 // Sumar puntos también en fallback
                                 const usdtPrice = parseFloat(order.price.split('USDT')[0]);
                                 if (!isNaN(usdtPrice)) {
-                                    addPoints(order.uid, usdtPrice, order.name);
+                                    addPoints(order.login_uid || order.uid, usdtPrice, order.name);
                                 }
                             } else {
                                 // Limpiamos caracteres que rompen el Markdown de Telegram en el mensaje de error
@@ -664,29 +812,35 @@ const server = http.createServer(async (req, res) => {
         let body = '';
         req.on('data', chunk => body += chunk);
         req.on('end', () => {
+            // Responder de inmediato para evitar reintentos de Macrodroid
+            res.writeHead(200);
+            res.end(JSON.stringify({ success: true }));
+
             try {
-                console.log(`\n[DEBUG-WEBHOOK] Datos recibidos: ${body}`);
                 const data = JSON.parse(body);
                 const text = data.text || '';
                 
-                if (!text) {
-                    console.log('[DEBUG-WEBHOOK] ❌ Texto vacío.');
-                    res.writeHead(200);
-                    return res.end('Empty');
+                if (!text) return;
+
+                // Evitar procesar el mismo mensaje en menos de 10 segundos
+                if (global.lastProcessedWebhooks && global.lastProcessedWebhooks[text]) {
+                    const diff = Date.now() - global.lastProcessedWebhooks[text];
+                    if (diff < 10000) {
+                        console.log('[DEBUG-WEBHOOK] ⏩ Ignorando duplicado reciente.');
+                        return;
+                    }
                 }
+                if (!global.lastProcessedWebhooks) global.lastProcessedWebhooks = {};
+                global.lastProcessedWebhooks[text] = Date.now();
 
                 console.log(`[DEBUG-WEBHOOK] Procesando: "${text}"`);
                 
-                // Buscador súper flexible: busca la palabra Ref o Referencia y el número que le sigue
                 let refMatch = text.match(/(?:Ref|Referencia)\s*:?\s*(\d+)/i);
-                // Buscador de monto: busca Bs o Bs. y el número (manejando comas y puntos)
                 let amountMatch = text.match(/Bs\.?\s*([\d,.]+)/i);
 
                 if (refMatch && amountMatch) {
                     const ref = refMatch[1];
-                    // Limpiar monto: quitar puntos de miles y cambiar coma por punto decimal
-                    let amountRaw = amountMatch[1];
-                    let amountStr = amountRaw.replace(/\./g, '').replace(',', '.');
+                    let amountStr = amountMatch[1].replace(/\./g, '').replace(',', '.');
                     const amount = parseFloat(amountStr);
 
                     console.log(`[DEBUG-WEBHOOK] ✅ ÉXITO EXTRAYENDO -> Ref: ${ref}, Monto: ${amount}`);
@@ -695,18 +849,10 @@ const server = http.createServer(async (req, res) => {
                         pagosValidados[ref] = { amount, time: new Date().toISOString(), used: false };
                         savePagos();
                     }
-                    // Intentar procesar siempre
                     processPendingOrder(ref, null);
-                } else {
-                    console.log(`[DEBUG-WEBHOOK] ⚠️ No se pudo extraer datos. Texto recibido: "${text}"`);
                 }
-                
-                res.writeHead(200);
-                res.end(JSON.stringify({ success: true, detected_ref: refMatch ? refMatch[1] : null }));
             } catch (e) {
                 console.error('[DEBUG-WEBHOOK] ❌ Error:', e.message);
-                res.writeHead(400);
-                res.end('Error');
             }
         });
     } else if (parsedUrl.pathname === '/status') {
@@ -733,10 +879,13 @@ const server = http.createServer(async (req, res) => {
         req.on('data', chunk => body += chunk);
         req.on('end', () => {
             try {
-                const data = JSON.parse(body);
+                const newCodes = data.codes.filter(c => c.length > 0);
+                if (newCodes.length === 0) { res.writeHead(400); return res.end(JSON.stringify({ error: 'Sin códigos válidos' })); }
                 if (pines[data.amount]) {
-                    pines[data.amount] = [...pines[data.amount], ...data.codes];
-                    fs.writeFileSync(PINES_FILE, JSON.stringify(pines), 'utf8');
+                    pines[data.amount] = [...pines[data.amount], ...newCodes];
+                    const rows = newCodes.map(code => ({ amount: data.amount, code, used: false }));
+                    supabase.from('ff_pines').insert(rows)
+                        .then(({ error }) => { if (error) console.error('[SUPABASE] Error guardando pines:', error.message); });
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ success: true, count: pines[data.amount].length }));
                 } else {
@@ -748,21 +897,223 @@ const server = http.createServer(async (req, res) => {
                 res.end(JSON.stringify({ error: 'Error procesando datos' }));
             }
         });
+    } else if (parsedUrl.pathname === '/admin/stats' && req.method === 'GET') {
+        const stats = {
+            pending: Object.values(orders).filter(o => o.status === 'pending').length,
+            approved: Object.values(orders).filter(o => o.status === 'approved').length,
+            rejected: Object.values(orders).filter(o => o.status === 'rejected').length,
+            total_users: Object.keys(users).length,
+            total_pines: Object.values(pines).reduce((acc, curr) => acc + curr.length, 0)
+        };
+        res.writeHead(200);
+        res.end(JSON.stringify(stats));
+    } else if (parsedUrl.pathname === '/admin/pedidos' && req.method === 'GET') {
+        res.writeHead(200);
+        res.end(JSON.stringify(Object.entries(orders).map(([ref, data]) => ({ ref, ...data }))));
+    } else if (parsedUrl.pathname === '/admin/aprobar' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', async () => {
+            try {
+                const { ref } = JSON.parse(body);
+                const order = orders[ref];
+                if (order && order.status === 'pending') {
+                    const result = await rechargeViaNetfreelat(order, ref);
+                    if (result.success) {
+                        orders[ref].status = 'approved';
+                        fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
+                        saveRecent(order.name, order.pack);
+                        const usdtPrice = parseFloat(order.price.split('USDT')[0]);
+                        if (!isNaN(usdtPrice)) addPoints(order.login_uid || order.uid, usdtPrice, order.name);
+                        queueWhatsAppMessage(order, true);
+                        updateTelegramStatus(ref);
+                        res.writeHead(200);
+                        res.end(JSON.stringify({ success: true }));
+                    } else {
+                        const pin = getFallbackPin(order.pack);
+                        if (pin) {
+                            orders[ref].status = 'approved';
+                            orders[ref].pin = pin;
+                            fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
+                            saveRecent(order.name, order.pack);
+                            const usdtPrice = parseFloat(order.price.split('USDT')[0]);
+                            if (!isNaN(usdtPrice)) addPoints(order.login_uid || order.uid, usdtPrice, order.name);
+                            queueWhatsAppMessage(order, true, pin);
+                            updateTelegramStatus(ref);
+                            res.writeHead(200);
+                            res.end(JSON.stringify({ success: true, message: 'Aprobado vía PIN' }));
+                        } else {
+                            res.writeHead(200);
+                            res.end(JSON.stringify({ success: false, message: 'Fallo recarga y no hay pines: ' + result.message }));
+                        }
+                    }
+                } else {
+                    res.writeHead(404);
+                    res.end(JSON.stringify({ error: 'Pedido no encontrado' }));
+                }
+            } catch (e) {
+                res.writeHead(400);
+                res.end(JSON.stringify({ error: 'Error' }));
+            }
+        });
+    } else if (parsedUrl.pathname === '/admin/rechazar' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const { ref } = JSON.parse(body);
+                if (orders[ref]) {
+                    orders[ref].status = 'rejected';
+                    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders), 'utf8');
+                    queueWhatsAppMessage(orders[ref], false);
+                    updateTelegramStatus(ref);
+                    res.writeHead(200);
+                    res.end(JSON.stringify({ success: true }));
+                }
+            } catch (e) { res.writeHead(400); res.end('Error'); }
+        });
+    } else if (parsedUrl.pathname === '/admin/usuarios' && req.method === 'GET') {
+        res.writeHead(200);
+        res.end(JSON.stringify(users));
+    } else if (parsedUrl.pathname === '/admin/usuarios/update_points' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const { uid, points } = JSON.parse(body);
+                if (users[uid]) {
+                    users[uid].points = parseInt(points);
+                    saveUser(uid);
+                    res.writeHead(200);
+                    res.end(JSON.stringify({ success: true }));
+                }
+            } catch (e) { res.writeHead(400); res.end('Error'); }
+        });
+    } else if (parsedUrl.pathname === '/admin/usuarios/set_password' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const { uid, password } = JSON.parse(body);
+                if (users[uid]) {
+                    users[uid].password = password || null;
+                    saveUser(uid);
+                    res.writeHead(200);
+                    res.end(JSON.stringify({ success: true }));
+                } else {
+                    res.writeHead(404);
+                    res.end(JSON.stringify({ success: false, message: 'Usuario no encontrado' }));
+                }
+            } catch (e) { res.writeHead(400); res.end('Error'); }
+        });
+    } else if (parsedUrl.pathname === '/api/check_password') {
+        const uid = parsedUrl.searchParams.get('uid');
+        const pass = parsedUrl.searchParams.get('pass');
+        if (!uid || !users[uid]) {
+            res.writeHead(404);
+            return res.end(JSON.stringify({ success: false, message: 'Usuario no encontrado' }));
+        }
+        const user = users[uid];
+        const hasPassword = !!user.password;
+        if (!hasPassword) {
+            // No tiene contraseña, puede entrar libre
+            res.writeHead(200);
+            return res.end(JSON.stringify({ success: true, hasPassword: false, name: user.name }));
+        }
+        if (pass && user.password === pass) {
+            res.writeHead(200);
+            return res.end(JSON.stringify({ success: true, hasPassword: true, name: user.name }));
+        }
+        // Solo verificar si tiene contraseña (sin pass en la query)
+        if (!pass) {
+            res.writeHead(200);
+            return res.end(JSON.stringify({ success: false, hasPassword: true }));
+        }
+        res.writeHead(200);
+        return res.end(JSON.stringify({ success: false, hasPassword: true, message: 'Contraseña incorrecta' }));
+    } else if (parsedUrl.pathname === '/admin/settings' && req.method === 'GET') {
+        res.writeHead(200);
+        res.end(JSON.stringify(settings));
+    } else if (parsedUrl.pathname === '/admin/settings' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const newSettings = JSON.parse(body);
+                settings = { ...settings, ...newSettings };
+                // Guardar en Supabase
+                const dbUpdate = {};
+                if (newSettings.tasa_del_dia !== undefined) dbUpdate.tasa_del_dia = newSettings.tasa_del_dia;
+                if (newSettings.barra_informativa !== undefined) dbUpdate.barra_informativa = newSettings.barra_informativa;
+                if (newSettings.metodos_pago !== undefined) dbUpdate.metodos_pago = newSettings.metodos_pago;
+                if (newSettings.whatsapp !== undefined) dbUpdate.whatsapp_config = newSettings.whatsapp;
+                if (newSettings.precios !== undefined) dbUpdate.precios = newSettings.precios;
+                if (newSettings.admin) {
+                    dbUpdate.admin_username = newSettings.admin.username;
+                    dbUpdate.admin_password = newSettings.admin.password;
+                }
+                supabase.from('ff_settings').update(dbUpdate).eq('id', 1)
+                    .then(({ error }) => { if (error) console.error('[SUPABASE] Error guardando settings:', error.message); });
+                res.writeHead(200);
+                res.end(JSON.stringify({ success: true }));
+            } catch (e) { res.writeHead(400); res.end('Error'); }
+        });
+    } else if (parsedUrl.pathname === '/api/config' && req.method === 'GET') {
+        const publicConfig = {
+            tasa_del_dia: settings.tasa_del_dia,
+            barra_informativa: settings.barra_informativa,
+            precios: settings.precios,
+            metodos_pago: settings.metodos_pago,
+            whatsapp: settings.whatsapp
+        };
+        res.writeHead(200);
+        res.end(JSON.stringify(publicConfig));
     } else if (parsedUrl.pathname === '/perfil') {
         const uid = parsedUrl.searchParams.get('uid');
+        const ref = parsedUrl.searchParams.get('ref'); // referido por
         if (uid && users[uid]) {
             res.writeHead(200);
-            res.end(JSON.stringify({ success: true, user: users[uid] }));
+            res.end(JSON.stringify({ success: true, user: users[uid], isNew: false }));
         } else if (uid) {
             // Registrar si no existe (con bono de bienvenida)
             users[uid] = { name: 'Jugador', points: 50, registered: new Date().toISOString() };
             saveUsers();
             res.writeHead(200);
-            res.end(JSON.stringify({ success: true, user: users[uid] }));
+            res.end(JSON.stringify({ success: true, user: users[uid], isNew: true }));
         } else {
             res.writeHead(400);
             res.end(JSON.stringify({ error: 'Falta uid' }));
         }
+    } else if (parsedUrl.pathname === '/api/referral' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try {
+                const { referrer_uid, new_uid } = JSON.parse(body);
+                // Validar que el nuevo usuario existe y que el referido también
+                if (!users[referrer_uid] || !users[new_uid]) {
+                    res.writeHead(404);
+                    return res.end(JSON.stringify({ success: false, message: 'Usuario no encontrado' }));
+                }
+                // Evitar auto-referido
+                if (referrer_uid === new_uid) {
+                    res.writeHead(400);
+                    return res.end(JSON.stringify({ success: false, message: 'No puedes referirte a ti mismo' }));
+                }
+                // Evitar doble referido: marcar al nuevo usuario como ya referido
+                if (users[new_uid].referred_by) {
+                    res.writeHead(200);
+                    return res.end(JSON.stringify({ success: false, message: 'Ya fue referido anteriormente' }));
+                }
+                // Acreditar 10 puntos al referidor
+                users[referrer_uid].points = (users[referrer_uid].points || 0) + 10;
+                users[new_uid].referred_by = referrer_uid;
+                saveUsers();
+                console.log(`[REFERRAL] ${referrer_uid} gana 10 pts por referir a ${new_uid}`);
+                res.writeHead(200);
+                res.end(JSON.stringify({ success: true, message: '10 puntos acreditados al referidor' }));
+            } catch (e) { res.writeHead(400); res.end('Error'); }
+        });
     } else if (parsedUrl.pathname === '/canjear' && req.method === 'POST') {
         let body = '';
         req.on('data', chunk => body += chunk);
@@ -882,6 +1233,7 @@ const server = http.createServer(async (req, res) => {
                 const data = JSON.parse(body);
                 if (data.status !== undefined) waBotStatus = data.status;
                 if (data.qr !== undefined) waBotQR = data.qr;
+                console.log(`[WA-STATUS] ${waBotStatus} ${waBotQR ? '(Con QR)' : ''}`);
                 res.writeHead(200);
                 res.end(JSON.stringify({ success: true }));
             } catch (e) {
@@ -935,10 +1287,12 @@ const server = http.createServer(async (req, res) => {
     }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
     console.log('=========================================');
-    console.log('  Servidor de Verificación Free Fire');
+    console.log('  Diamond Center FF - Servidor');
     console.log(`  Corriendo en: http://localhost:${PORT}`);
-    console.log(`  Prueba: http://localhost:${PORT}/verificar?uid=9583620455`);
+    console.log('  Cargando datos desde Supabase...');
     console.log('=========================================');
+    await loadFromSupabase();
+    console.log('[SERVER] ✅ Listo para recibir solicitudes.');
 });

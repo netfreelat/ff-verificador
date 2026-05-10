@@ -33,9 +33,9 @@
     </div>
 
     <div class="header-actions">
-        <div id="user-display" class="user-info-header" style="display: none;">
+        <div id="user-display" class="user-info-header" style="display: none; cursor: pointer;" title="Gestionar mi cuenta">
             <span class="header-points"><i class="fa-solid fa-star"></i> <span id="header-points-val">0</span> puntos</span>
-            <button id="logout-btn" class="btn-logout-header" title="Salir"><i class="fa-solid fa-right-from-bracket"></i></button>
+            <button id="logout-btn" class="btn-logout-header" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
         </div>
         <a href="canjear.html" class="btn-login-header" style="text-decoration: none; margin-right: 10px;">
             <i class="fa-solid fa-gift"></i> Canjear PIN
@@ -46,6 +46,12 @@
     </div>
 
     <div class="main-container">
+        <!-- Banner de Bienvenida para nuevos usuarios -->
+        <div id="new-user-banner" style="display: none; background: rgba(157, 0, 255, 0.05); border: 1px dashed var(--primary); padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; animation: pulse 2s infinite;">
+            <h3 style="color: var(--secondary); margin-bottom: 5px; font-family: 'Montserrat', sans-serif;">¡Hola! Gana premios gratis 💎</h3>
+            <p style="font-size: 0.85rem; color: #aaa;">Inicia sesión con tu ID para acumular puntos por cada recarga y canjearlos por diamantes.</p>
+        </div>
+
         <div class="card">
             <div class="logo-container">
                 <h1>FREE FIRE</h1>
@@ -74,7 +80,7 @@
             </div>
 
             <!-- WhatsApp Channel Button (Compact) -->
-            <a href="https://whatsapp.com/channel/0029VbCVjqL11ulRYKf1eW29" target="_blank" class="whatsapp-btn">
+            <a href="#" target="_blank" class="whatsapp-btn" id="wa-canal-link">
                 <i class="fa-brands fa-whatsapp"></i> Canal WhatsApp
             </a>
 
@@ -100,6 +106,19 @@
                 <button id="change-id-btn" class="btn-change-id">
                     <i class="fa-solid fa-user-pen"></i> Cambiar ID / Salir
                 </button>
+
+                <!-- Banner de Referidos -->
+                <div id="referral-banner" style="margin-top: 14px; background: linear-gradient(135deg, rgba(37,211,102,0.1), rgba(18,140,126,0.1)); border: 1px solid rgba(37,211,102,0.3); border-radius: 12px; padding: 12px 16px; text-align: center;">
+                    <p style="margin: 0 0 8px 0; font-size: 0.8rem; color: #25D366; font-weight: 700;">
+                        <i class="fa-solid fa-share-nodes"></i> ¡Gana puntos gratis!
+                    </p>
+                    <p style="margin: 0 0 10px 0; font-size: 0.75rem; color: #aaa;">
+                        Comparte tu link con nuevos usuarios y gana <strong style="color:#fff;">+10 puntos</strong> por cada uno.
+                    </p>
+                    <button id="copy-ref-link-btn" style="background: linear-gradient(135deg,#25D366,#128C7E); border: none; color: white; border-radius: 8px; padding: 7px 16px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+                        <i class="fa-solid fa-link"></i> Copiar mi Link
+                    </button>
+                </div>
             </div>
 
             <!-- Diamond Packages Section (Hidden by default) -->
@@ -181,9 +200,9 @@
                 <!-- Pago Móvil Details -->
                 <div id="details-pagomovil" class="method-details" style="display: none;">
                     <div class="info-box">
-                        <p><strong>Banco:</strong> Mercantil (0105)</p>
-                        <p><strong>Teléfono:</strong> 0412-3491068</p>
-                        <p><strong>Cédula/RIF:</strong> 17716286</p>
+                        <p><strong>Banco:</strong> <span id="display-pm-banco">Cargando...</span></p>
+                        <p><strong>Teléfono:</strong> <span id="display-pm-telefono">Cargando...</span></p>
+                        <p><strong>Cédula/RIF:</strong> <span id="display-pm-cedula">Cargando...</span></p>
                         <button class="btn-copy" onclick="copyData('pagomovil')"><i class="fa-solid fa-copy"></i> Copiar Datos de Pago</button>
                     </div>
                     <div class="input-group" style="margin-top: 15px;">
@@ -198,8 +217,8 @@
                 <!-- Binance Details -->
                 <div id="details-binance" class="method-details" style="display: none;">
                     <div class="info-box">
-                        <p><strong>Binance ID:</strong> 198080894</p>
-                        <p><strong>Nombre:</strong> Recargas free fire</p>
+                        <p><strong>Binance ID:</strong> <span id="display-bin-id">Cargando...</span></p>
+                        <p><strong>Nombre:</strong> <span id="display-bin-nombre">Cargando...</span></p>
                         <button class="btn-copy" onclick="copyData('binance')"><i class="fa-solid fa-copy"></i> Copiar Binance ID</button>
                     </div>
                     <div class="input-group" style="margin-top: 15px;">
@@ -230,7 +249,7 @@
                     </div>
                 </div>
 
-                <button id="finish-btn" class="btn-primary" style="margin-top: 20px;" disabled>
+                <button id="finish-btn" class="btn-primary" style="margin-top: 20px;">
                     Confirmar Pago
                 </button>
                 <button id="back-btn" class="btn-secondary"
@@ -246,7 +265,7 @@
             <div class="footer-text">
                 <p>Compatible con toda la region de LATAM para Free Fire.</p>
                 
-                <a href="https://wa.me/584125322412" target="_blank" class="support-btn">
+                <a href="#" target="_blank" class="support-btn" id="wa-soporte-link">
                     <i class="fa-solid fa-headset"></i> Soporte Técnico
                 </a>
 

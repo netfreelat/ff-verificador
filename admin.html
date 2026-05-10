@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Administrativo | Almacén de Pines</title>
+    <title>Panel Administrativo | Diamond Center</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -36,13 +36,13 @@
         }
 
         .admin-container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         .header h1 {
@@ -56,11 +56,62 @@
             -webkit-text-fill-color: transparent;
         }
 
+        /* Tabs Navigation */
+        .tabs-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: var(--dark-card);
+            border: 1px solid rgba(255,255,255,0.05);
+            color: var(--text-gray);
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 15px rgba(157, 0, 255, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 15px;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         .stat-card {
@@ -78,7 +129,7 @@
             box-shadow: 0 10px 30px rgba(0, 240, 255, 0.1);
         }
 
-        .stat-card .amount {
+        .stat-card .label {
             font-size: 0.8rem;
             color: var(--text-gray);
             font-weight: 600;
@@ -86,72 +137,112 @@
             margin-bottom: 5px;
         }
 
-        .stat-card .count {
-            font-size: 1.8rem;
+        .stat-card .value {
+            font-size: 2rem;
             font-family: 'Montserrat', sans-serif;
             font-weight: 800;
             color: var(--secondary);
         }
 
-        .stat-card .count.empty {
-            color: var(--danger);
-        }
-
         .action-card {
             background: var(--dark-card);
             border-radius: 24px;
-            padding: 40px;
+            padding: 30px;
             border: 1px solid rgba(157, 0, 255, 0.1);
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
         }
 
         .action-card h2 {
             font-family: 'Montserrat', sans-serif;
             font-weight: 700;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 12px;
+            font-size: 1.5rem;
         }
 
-        .form-group { margin-bottom: 25px; }
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 10px;
+        }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
+        table {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 0.9rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            color: var(--secondary);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            border-bottom: 2px solid rgba(255,255,255,0.05);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
             color: var(--text-gray);
         }
 
-        select, textarea {
+        tr:hover td {
+            color: white;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-pending { background: rgba(255, 193, 7, 0.2); color: #FFC107; border: 1px solid #FFC107; }
+        .status-approved { background: rgba(37, 211, 102, 0.2); color: #25D366; border: 1px solid #25D366; }
+        .status-rejected { background: rgba(255, 75, 43, 0.2); color: #ff4b2b; border: 1px solid #ff4b2b; }
+
+        .btn-action {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 700;
+            transition: var(--transition);
+        }
+
+        .btn-approve { background: var(--success); color: white; margin-right: 5px; }
+        .btn-reject { background: var(--danger); color: white; }
+        .btn-approve:hover { transform: scale(1.05); opacity: 0.9; }
+        .btn-reject:hover { transform: scale(1.05); opacity: 0.9; }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text-gray); }
+        select, textarea, input {
             width: 100%;
             background: rgba(0,0,0,0.3);
             border: 2px solid rgba(255,255,255,0.05);
             border-radius: 12px;
-            padding: 15px;
+            padding: 12px;
             color: white;
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: var(--transition);
             outline: none;
         }
+        select:focus, textarea:focus, input:focus { border-color: var(--primary); background: rgba(0,0,0,0.5); }
+        textarea { height: 100px; resize: none; font-family: monospace; }
 
-        select:focus, textarea:focus {
-            border-color: var(--primary);
-            background: rgba(0,0,0,0.5);
-        }
-
-        textarea {
-            height: 150px;
-            resize: none;
-            font-family: monospace;
-        }
-
-        .btn-add {
+        .btn-main {
             width: 100%;
             background: var(--primary);
             color: white;
-            padding: 18px;
+            padding: 15px;
             border: none;
             border-radius: 12px;
             font-size: 1rem;
@@ -165,27 +256,15 @@
             box-shadow: 0 4px 15px rgba(157, 0, 255, 0.4);
         }
 
-        .btn-add:hover {
-            background: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(157, 0, 255, 0.6);
-        }
+        .btn-main:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(157, 0, 255, 0.6); }
 
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 30px;
-            color: var(--text-gray);
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: var(--transition);
-        }
-
+        .back-link { display: block; text-align: center; margin-top: 30px; color: var(--text-gray); text-decoration: none; font-size: 0.9rem; transition: var(--transition); }
         .back-link:hover { color: white; }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .header h1 { font-size: 1.8rem; }
+            .btn-action span { display: none; }
         }
     </style>
 </head>
@@ -193,47 +272,213 @@
 
     <div class="admin-container">
         <div class="header">
-            <h1>ALMACÉN DE PINES</h1>
-            <p>Gestiona tus códigos de Free Fire de forma eficiente</p>
+            <h1>DIAMOND CENTER ADMIN</h1>
+            <p>Control total de pedidos, pines y usuarios</p>
         </div>
 
-        <!-- Stock de Pines -->
-        <div class="stats-grid" id="stats-container">
-            <!-- Cargado por JS -->
-        </div>
+        <nav class="tabs-nav">
+            <button class="tab-btn active" onclick="showTab('dashboard', this)"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
+            <button class="tab-btn" onclick="showTab('pedidos', this)"><i class="fa-solid fa-shopping-cart"></i> Pedidos</button>
+            <button class="tab-btn" onclick="showTab('pines', this)"><i class="fa-solid fa-key"></i> Almacén</button>
+            <button class="tab-btn" onclick="showTab('usuarios', this)"><i class="fa-solid fa-users"></i> Usuarios</button>
+            <button class="tab-btn" onclick="showTab('wa-bot-tab', this)"><i class="fa-brands fa-whatsapp"></i> Bot WA</button>
+            <button class="tab-btn" onclick="showTab('settings', this)"><i class="fa-solid fa-cog"></i> Ajustes</button>
+        </nav>
 
-        <!-- WhatsApp Bot Status -->
-        <div class="action-card" style="margin-bottom: 20px; text-align: center;">
-            <h2 style="justify-content: center;"><i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> Bot de WhatsApp (VPS)</h2>
-            <p style="font-size: 1.2rem; font-weight: 600; margin-bottom: 15px;">Estado: <span id="wa-status-text" style="color: var(--text-gray);">Cargando...</span></p>
-            <div id="wa-qr-container" style="display: none; background: white; padding: 15px; border-radius: 10px; width: 230px; height: 230px; margin: 0 auto;"></div>
-            <p id="wa-qr-help" style="display: none; color: #aaa; margin-top: 15px; font-size: 0.9rem;">Escanea este código con tu celular para conectar el bot de notificaciones.</p>
-        </div>
-
-        <!-- Agregar Pines -->
-        <div class="action-card">
-            <h2><i class="fa-solid fa-plus-circle" style="color: var(--primary);"></i> Agregar Nuevos Pines</h2>
+        <!-- DASHBOARD TAB -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats-grid" id="dashboard-stats">
+                <!-- Cargado por JS -->
+            </div>
             
-            <div class="form-group">
-                <label>Selecciona el paquete:</label>
-                <select id="pin-amount">
-                    <option value="100">100 + 10 Diamantes</option>
-                    <option value="310">310 + 31 Diamantes</option>
-                    <option value="520">520 + 52 Diamantes</option>
-                    <option value="1060">1060 + 106 Diamantes</option>
-                    <option value="2180">2180 + 218 Diamantes</option>
-                    <option value="5600">5600 + 560 Diamantes</option>
-                </select>
+            <div class="action-card">
+                <h2><i class="fa-solid fa-bolt" style="color: var(--secondary);"></i> Automatización BDV</h2>
+                <p style="color: var(--text-gray); margin-bottom: 20px;">El sistema consulta automáticamente los movimientos del banco para validar los pedidos.</p>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="loadDashboardStats()" class="btn-main" style="width: auto; padding: 10px 20px;">
+                        <i class="fa-solid fa-sync"></i> Sincronizar Datos
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PEDIDOS TAB -->
+        <div id="pedidos" class="tab-content">
+            <div class="action-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <h2 style="margin: 0;"><i class="fa-solid fa-list-check" style="color: var(--secondary);"></i> Gestión de Pedidos</h2>
+                    <div style="width: 100%; max-width: 300px;">
+                        <input type="text" id="order-search" placeholder="🔍 Buscar por Ref o ID..." onkeyup="filterOrders()" style="padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Referencia</th>
+                                <th>Jugador</th>
+                                <th>Paquete</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table-body">
+                            <!-- Cargado por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ALMACEN TAB -->
+        <div id="pines" class="tab-content">
+            <div class="stats-grid" id="pines-stats">
+                <!-- Cargado por JS -->
             </div>
 
-            <div class="form-group">
-                <label>Pega los códigos aquí (uno por línea):</label>
-                <textarea id="pin-codes" placeholder="CÓDIGO1&#10;CÓDIGO2&#10;CÓDIGO3"></textarea>
+            <div class="action-card">
+                <h2><i class="fa-solid fa-plus-circle" style="color: var(--primary);"></i> Cargar Nuevos Pines</h2>
+                <div class="form-group">
+                    <label>Paquete:</label>
+                    <select id="pin-amount">
+                        <option value="100">100 + 10 Diamantes</option>
+                        <option value="310">310 + 31 Diamantes</option>
+                        <option value="520">520 + 52 Diamantes</option>
+                        <option value="1060">1060 + 106 Diamantes</option>
+                        <option value="2180">2180 + 218 Diamantes</option>
+                        <option value="5600">5600 + 560 Diamantes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Pega los códigos aquí (uno por línea):</label>
+                    <textarea id="pin-codes" placeholder="CÓDIGO1&#10;CÓDIGO2"></textarea>
+                </div>
+                <button onclick="addPines()" class="btn-main">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Cargar al Almacén
+                </button>
             </div>
+        </div>
 
-            <button id="add-btn" class="btn-add">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Cargar Pines al Almacén
-            </button>
+        <!-- USUARIOS TAB -->
+        <div id="usuarios" class="tab-content">
+            <div class="action-card">
+                <h2><i class="fa-solid fa-users-gear" style="color: var(--secondary);"></i> Gestión de Usuarios</h2>
+                <div class="form-group">
+                    <input type="text" id="user-search" placeholder="Buscar por ID o nombre..." onkeyup="filterUsers()">
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID Jugador</th>
+                                <th>Nombre</th>
+                                <th>Puntos</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <!-- Cargado por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="settings" class="tab-content">
+            <div class="action-card">
+                <h2><i class="fa-solid fa-cog" style="color: var(--primary);"></i> Configuración Global</h2>
+                
+                <div class="form-group">
+                    <label>Tasa del día (Bs por 1 USDT):</label>
+                    <input type="number" id="setting-tasa" step="0.01" style="font-size: 1.5rem; color: var(--secondary); font-weight: 800;">
+                </div>
+
+                <div class="form-group">
+                    <label>Barra Informativa (Marquesina):</label>
+                    <textarea id="setting-marquee" placeholder="Escribe el mensaje que verán los usuarios..."></textarea>
+                </div>
+
+                <hr style="opacity:0.1; margin: 30px 0;">
+                <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-tags" style="color: var(--secondary);"></i> Precios de Diamantes (USDT)</h3>
+                <div id="prices-editor" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <!-- Cargado por JS -->
+                </div>
+
+                <hr style="opacity:0.1; margin: 30px 0;">
+                <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-credit-card" style="color: #25D366;"></i> Métodos de Pago</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left;">
+                    <!-- Pago Móvil -->
+                    <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);">
+                        <h4 style="margin-bottom: 15px; color: var(--secondary); font-size: 1.1rem;"><i class="fa-solid fa-mobile-screen"></i> Pago Móvil</h4>
+                        <div class="form-group">
+                            <label>Banco:</label>
+                            <input type="text" id="pm-banco" placeholder="Ej: Mercantil (0105)">
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono:</label>
+                            <input type="text" id="pm-telefono" placeholder="Ej: 04121234567">
+                        </div>
+                        <div class="form-group">
+                            <label>Cédula/RIF:</label>
+                            <input type="text" id="pm-cedula" placeholder="Ej: V-12345678">
+                        </div>
+                    </div>
+
+                    <!-- Binance -->
+                    <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);">
+                        <h4 style="margin-bottom: 15px; color: #f3ba2f; font-size: 1.1rem;"><i class="fa-brands fa-bitcoin"></i> Binance Pay</h4>
+                        <div class="form-group">
+                            <label>Binance ID:</label>
+                            <input type="text" id="bin-id" placeholder="Ej: 123456789">
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre Titular:</label>
+                            <input type="text" id="bin-nombre" placeholder="Ej: Juan Perez">
+                        </div>
+                    </div>
+                <hr style="opacity:0.1; margin: 30px 0;">
+                <h3 style="margin-bottom: 20px;"><i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> Enlaces de WhatsApp</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left;">
+                    <div class="form-group">
+                        <label>Número de Soporte (Ej: 584125322412):</label>
+                        <input type="text" id="wa-soporte" placeholder="584125322412">
+                    </div>
+                    <div class="form-group">
+                        <label>URL del Canal:</label>
+                        <input type="text" id="wa-canal" placeholder="https://whatsapp.com/channel/...">
+                    </div>
+                </div>
+
+                <hr style="opacity:0.1; margin: 30px 0;">
+                <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-user-shield" style="color: var(--primary);"></i> Perfil de Administrador</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Usuario:</label>
+                        <input type="text" id="admin-user">
+                    </div>
+                    <div class="form-group">
+                        <label>Nueva Contraseña:</label>
+                        <input type="password" id="admin-pass" placeholder="••••••••">
+                    </div>
+                </div>
+
+                <button onclick="saveSettings()" class="btn-main" style="margin-top: 20px;">
+                    <i class="fa-solid fa-save"></i> Guardar Todos los Cambios
+                </button>
+            </div>
+        </div>
+
+        <!-- WHATSAPP TAB -->
+        <div id="wa-bot-tab" class="tab-content">
+            <div class="action-card" style="text-align: center;">
+                <h2 style="justify-content: center;"><i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> Bot de Notificaciones</h2>
+                <p style="margin-bottom: 15px;">Estado: <span id="wa-status-text" style="font-weight: 700;">Cargando...</span></p>
+                <div id="wa-qr-container" style="display: none; background: white; padding: 15px; border-radius: 10px; width: 230px; height: 230px; margin: 0 auto;"></div>
+                <p id="wa-qr-help" style="display: none; color: var(--text-gray); margin-top: 15px; font-size: 0.8rem;">Escanea para conectar el bot en el VPS.</p>
+            </div>
         </div>
 
         <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Volver a la Tienda</a>
@@ -241,115 +486,367 @@
 
     <script>
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || !window.location.hostname;
-        const SERVER_URL = window.location.hostname.includes('loca.lt') ? window.location.origin : (isLocal ? 'http://localhost:3500' : 'https://ff-verificador.onrender.com');
+        const SERVER_URL = window.location.hostname.includes('loca.lt') ? window.location.origin : (isLocal ? 'http://localhost:3500' : '');
 
-        async function loadStats() {
+        function showTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) targetTab.classList.add('active');
+            if (btn) btn.classList.add('active');
+
+            if (tabId === 'dashboard') loadDashboardStats();
+            if (tabId === 'pedidos') loadOrders();
+            if (tabId === 'pines') loadPinStats();
+            if (tabId === 'usuarios') loadUsers();
+            if (tabId === 'wa-bot-tab') checkWaStatus();
+            if (tabId === 'settings') loadSettings();
+        }
+
+        async function loadDashboardStats() {
+            try {
+                const res = await fetch(`${SERVER_URL}/admin/stats`);
+                const stats = await res.json();
+                document.getElementById('dashboard-stats').innerHTML = `
+                    <div class="stat-card">
+                        <span class="label">P. PENDIENTES</span>
+                        <span class="value" style="color:#FFC107">${stats.pending}</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="label">P. APROBADOS</span>
+                        <span class="value">${stats.approved}</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="label">USUARIOS</span>
+                        <span class="value" style="color:var(--primary)">${stats.total_users}</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="label">STOCK TOTAL</span>
+                        <span class="value" style="color:var(--secondary)">${stats.total_pines}</span>
+                    </div>
+                `;
+            } catch (e) { console.error(e); }
+        }
+
+        let allOrders = [];
+        async function loadOrders() {
+            try {
+                const res = await fetch(`${SERVER_URL}/admin/pedidos`);
+                allOrders = await res.json();
+                allOrders.sort((a, b) => new Date(b.time) - new Date(a.time));
+                renderOrders(allOrders);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderOrders(ordersList) {
+            const tbody = document.getElementById('orders-table-body');
+            tbody.innerHTML = '';
+            ordersList.forEach(order => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><code>${order.ref}</code></td>
+                    <td>${order.name}<br><small>ID: ${order.uid}</small></td>
+                    <td>${order.pack}</td>
+                    <td><span class="status-badge status-${order.status}">${order.status}</span></td>
+                    <td>
+                        ${order.status === 'pending' ? `
+                            <button onclick="approveOrder('${order.ref}')" class="btn-action btn-approve"><i class="fa-solid fa-check"></i></button>
+                            <button onclick="rejectOrder('${order.ref}')" class="btn-action btn-reject"><i class="fa-solid fa-times"></i></button>
+                        ` : '-'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterOrders() {
+            const query = document.getElementById('order-search').value.toLowerCase();
+            const filtered = allOrders.filter(o => 
+                o.ref.toLowerCase().includes(query) || 
+                o.uid.toLowerCase().includes(query) || 
+                (o.name && o.name.toLowerCase().includes(query))
+            );
+            renderOrders(filtered);
+        }
+
+        async function approveOrder(ref) {
+            Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const res = await fetch(`${SERVER_URL}/admin/aprobar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ref })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    Swal.fire('¡Éxito!', result.message || 'Pedido aprobado.', 'success');
+                    loadOrders();
+                } else {
+                    Swal.fire('Error', result.message, 'error');
+                }
+            } catch (e) { Swal.fire('Error', 'Conexión fallida', 'error'); }
+        }
+
+        async function rejectOrder(ref) {
+            const { isConfirmed } = await Swal.fire({ title: '¿Rechazar?', text: "El usuario recibirá notificación.", icon: 'warning', showCancelButton: true });
+            if (!isConfirmed) return;
+            try {
+                await fetch(`${SERVER_URL}/admin/rechazar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ref })
+                });
+                loadOrders();
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadPinStats() {
             try {
                 const res = await fetch(`${SERVER_URL}/admin/pines`);
                 const pines = await res.json();
-                const container = document.getElementById('stats-container');
+                const container = document.getElementById('pines-stats');
                 container.innerHTML = '';
-
                 Object.keys(pines).forEach(amount => {
                     const count = pines[amount].length;
-                    const card = document.createElement('div');
-                    card.className = 'stat-card';
-                    card.innerHTML = `
-                        <span class="amount">${amount} 💎</span>
-                        <span class="count ${count === 0 ? 'empty' : ''}">${count}</span>
-                        <p style="font-size: 0.7rem; color: #666; margin-top: 5px;">Disponibles</p>
+                    container.innerHTML += `
+                        <div class="stat-card">
+                            <span class="label">${amount} DIAMANTES</span>
+                            <span class="value ${count === 0 ? 'empty' : ''}">${count}</span>
+                        </div>
                     `;
-                    container.appendChild(card);
                 });
-            } catch (e) {
-                console.error('Error cargando estadísticas:', e);
-            }
+            } catch (e) { console.error(e); }
         }
 
-        document.getElementById('add-btn').addEventListener('click', async () => {
+        async function addPines() {
             const amount = document.getElementById('pin-amount').value;
-            const textarea = document.getElementById('pin-codes');
-            const codes = textarea.value.split('\n').map(c => c.trim()).filter(c => c.length > 0);
-
-            if (codes.length === 0) {
-                Swal.fire({ icon: 'warning', title: 'Sin datos', text: 'Por favor, ingresa al menos un código.' });
-                return;
-            }
-
-            Swal.fire({ title: 'Cargando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
+            const codes = document.getElementById('pin-codes').value.split('\n').map(c => c.trim()).filter(c => c.length > 0);
+            if (codes.length === 0) return;
             try {
                 const res = await fetch(`${SERVER_URL}/admin/pines/add`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ amount, codes })
                 });
-
-                const result = await res.json();
-                if (result.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Pines Agregados!',
-                        text: `Se cargaron ${codes.length} nuevos pines correctamente.`,
-                        confirmButtonColor: '#9D00FF'
-                    });
-                    textarea.value = '';
-                    loadStats();
-                } else {
-                    throw new Error(result.error);
+                if ((await res.json()).success) {
+                    Swal.fire('¡Listo!', 'Pines cargados.', 'success');
+                    document.getElementById('pin-codes').value = '';
+                    loadPinStats();
                 }
-            } catch (e) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los pines.' });
+            } catch (e) { console.error(e); }
+        }
+
+        let allUsers = {};
+        async function loadUsers() {
+            try {
+                const res = await fetch(`${SERVER_URL}/admin/usuarios`);
+                allUsers = await res.json();
+                renderUsers(allUsers);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderUsers(usersMap) {
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '';
+            Object.entries(usersMap).forEach(([uid, data]) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><code>${uid}</code></td>
+                    <td>${data.name}</td>
+                    <td style="color:var(--secondary); font-weight:800">${data.points}</td>
+                    <td style="color:${data.password ? '#25D366' : '#aaa'}; font-size:0.8rem;">${data.password ? '🔒 Tiene' : '🔓 Sin clave'}</td>
+                    <td>
+                        <button onclick="editPoints('${uid}', ${data.points})" class="btn-action" style="background:#333;" title="Editar Puntos"><i class="fa-solid fa-edit"></i></button>
+                        <button onclick="editPassword('${uid}')" class="btn-action" style="background:#1a0a2e;" title="Cambiar Contraseña"><i class="fa-solid fa-key"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterUsers() {
+            const query = document.getElementById('user-search').value.toLowerCase();
+            const filtered = {};
+            Object.entries(allUsers).forEach(([uid, data]) => {
+                if (uid.includes(query) || data.name.toLowerCase().includes(query)) filtered[uid] = data;
+            });
+            renderUsers(filtered);
+        }
+
+        async function editPoints(uid, current) {
+            const { value: newPoints } = await Swal.fire({ title: 'Editar Puntos', input: 'number', inputValue: current, showCancelButton: true });
+            if (newPoints !== null) {
+                try {
+                    await fetch(`${SERVER_URL}/admin/usuarios/update_points`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ uid, points: newPoints })
+                    });
+                    loadUsers();
+                } catch (e) { console.error(e); }
             }
-        });
+        }
 
-        loadStats();
+        async function editPassword(uid) {
+            const { value: newPass } = await Swal.fire({
+                title: '🔑 Cambiar Contraseña',
+                html: `
+                    <p style="font-size:0.85rem;color:#aaa;margin-bottom:15px;">ID: <code>${uid}</code><br>Deja vacío para <strong>eliminar</strong> la contraseña.</p>
+                    <input id="swal-new-pass" type="text" class="swal2-input" placeholder="Nueva contraseña (o vacío para quitar)">
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                background: 'rgba(20, 10, 35, 0.98)',
+                color: '#fff',
+                preConfirm: () => document.getElementById('swal-new-pass').value.trim()
+            });
 
-        // Lógica de WhatsApp Bot
-        let currentQR = '';
-        let qrCodeObj = null;
+            if (newPass !== undefined) { // undefined = cancelado
+                try {
+                    const res = await fetch(`${SERVER_URL}/admin/usuarios/set_password`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ uid, password: newPass || null })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: newPass ? 'Contraseña establecida' : 'Contraseña eliminada', timer: 1500, showConfirmButton: false });
+                        loadUsers();
+                    }
+                } catch (e) { Swal.fire('Error', 'No se pudo actualizar.', 'error'); }
+            }
+        }
+
+        let allSettings = {};
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${SERVER_URL}/admin/settings`);
+                allSettings = await res.json();
+                document.getElementById('setting-tasa').value = allSettings.tasa_del_dia;
+                document.getElementById('setting-marquee').value = allSettings.barra_informativa;
+                document.getElementById('admin-user').value = allSettings.admin.username;
+
+                // Cargar métodos de pago
+                if (allSettings.metodos_pago) {
+                    document.getElementById('pm-banco').value = allSettings.metodos_pago.pagomovil.banco;
+                    document.getElementById('pm-telefono').value = allSettings.metodos_pago.pagomovil.telefono;
+                    document.getElementById('pm-cedula').value = allSettings.metodos_pago.pagomovil.cedula;
+                    document.getElementById('bin-id').value = allSettings.metodos_pago.binance.id;
+                    document.getElementById('bin-nombre').value = allSettings.metodos_pago.binance.nombre;
+                }
+
+                // Cargar WhatsApp
+                if (allSettings.whatsapp) {
+                    document.getElementById('wa-soporte').value = allSettings.whatsapp.soporte;
+                    document.getElementById('wa-canal').value = allSettings.whatsapp.canal;
+                }
+
+                const pricesEditor = document.getElementById('prices-editor');
+                pricesEditor.innerHTML = '';
+                Object.entries(allSettings.precios).forEach(([amount, data]) => {
+                    pricesEditor.innerHTML += `
+                        <div class="form-group" style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <label style="color: var(--text-gray); font-weight: 700; margin-bottom: 10px; display: block;">${data.label}</label>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="number" step="0.01" class="price-input" data-amount="${amount}" value="${data.usdt}" style="font-size: 1.1rem; color: white;">
+                                <span style="font-weight: 800; color: var(--secondary);">USDT</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function saveSettings() {
+            const { isConfirmed } = await Swal.fire({ title: '¿Guardar cambios?', text: "Se actualizará la tasa y los precios para todos los usuarios.", icon: 'question', showCancelButton: true });
+            if (!isConfirmed) return;
+
+            Swal.fire({ title: 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            const precios = {};
+            document.querySelectorAll('.price-input').forEach(input => {
+                const amount = input.dataset.amount;
+                precios[amount] = { 
+                    usdt: parseFloat(input.value),
+                    label: allSettings.precios[amount].label
+                };
+            });
+
+            const newSettings = {
+                ...allSettings,
+                tasa_del_dia: parseFloat(document.getElementById('setting-tasa').value),
+                barra_informativa: document.getElementById('setting-marquee').value,
+                admin: {
+                    ...allSettings.admin,
+                    username: document.getElementById('admin-user').value
+                },
+                metodos_pago: {
+                    pagomovil: {
+                        banco: document.getElementById('pm-banco').value,
+                        telefono: document.getElementById('pm-telefono').value,
+                        cedula: document.getElementById('pm-cedula').value
+                    },
+                    binance: {
+                        id: document.getElementById('bin-id').value,
+                        nombre: document.getElementById('bin-nombre').value
+                    }
+                },
+                whatsapp: {
+                    soporte: document.getElementById('wa-soporte').value,
+                    canal: document.getElementById('wa-canal').value
+                },
+                precios
+            };
+
+            const newPass = document.getElementById('admin-pass').value;
+            if (newPass) newSettings.admin.password = newPass;
+
+            try {
+                const res = await fetch(`${SERVER_URL}/admin/settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newSettings)
+                });
+                if ((await res.json()).success) {
+                    Swal.fire('¡Éxito!', 'Configuración actualizada.', 'success');
+                    document.getElementById('admin-pass').value = '';
+                    loadSettings();
+                }
+            } catch (e) { Swal.fire('Error', 'No se pudo guardar.', 'error'); }
+        }
 
         async function checkWaStatus() {
             try {
                 const res = await fetch(`${SERVER_URL}/api/wa_status`);
                 const data = await res.json();
-                
                 const statusEl = document.getElementById('wa-status-text');
                 const qrContainer = document.getElementById('wa-qr-container');
-                const qrHelp = document.getElementById('wa-qr-help');
-
                 statusEl.innerText = data.status;
-                
-                if (data.status === 'Conectado') {
-                    statusEl.style.color = '#25D366'; // Verde
-                    qrContainer.style.display = 'none';
-                    qrHelp.style.display = 'none';
-                } else if (data.status === 'Esperando QR') {
-                    statusEl.style.color = '#FFC107'; // Amarillo
-                    qrContainer.style.display = 'block';
-                    qrHelp.style.display = 'block';
-                    
-                    if (data.qr && data.qr !== currentQR) {
-                        currentQR = data.qr;
-                        qrContainer.innerHTML = ''; // Limpiar anterior
-                        qrCodeObj = new QRCode(qrContainer, {
-                            text: data.qr,
-                            width: 200,
-                            height: 200
-                        });
-                    }
-                } else {
-                    statusEl.style.color = '#ff4b2b'; // Rojo
-                    qrContainer.style.display = 'none';
-                    qrHelp.style.display = 'none';
-                }
-            } catch (e) {
-                console.error('Error cargando estado WA:', e);
-            }
+                if (data.status === 'Conectado') { statusEl.style.color = '#25D366'; qrContainer.style.display = 'none'; }
+                else if (data.status === 'Esperando QR') {
+                    statusEl.style.color = '#FFC107'; qrContainer.style.display = 'block';
+                    if (data.qr) { qrContainer.innerHTML = ''; new QRCode(qrContainer, { text: data.qr, width: 200, height: 200 }); }
+                } else { statusEl.style.color = '#ff4b2b'; qrContainer.style.display = 'none'; }
+            } catch (e) { console.error(e); }
         }
 
-        setInterval(checkWaStatus, 3000);
-        checkWaStatus();
+        // Init
+        loadDashboardStats();
+
+        // Refresco automático de datos (cada 5 segundos)
+        setInterval(() => {
+            const activeTabBtn = document.querySelector('.tab-btn.active');
+            const activeTabText = activeTabBtn ? activeTabBtn.innerText.trim() : '';
+            
+            if (activeTabText.includes('Dashboard')) loadDashboardStats();
+            if (activeTabText.includes('Pedidos')) loadOrders();
+            if (activeTabText.includes('Almacén')) loadPinStats();
+            if (activeTabText.includes('Usuarios')) loadUsers();
+            
+            checkWaStatus();
+        }, 5000);
     </script>
 </body>
 </html>

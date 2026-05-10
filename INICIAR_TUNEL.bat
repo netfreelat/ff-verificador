@@ -1,5 +1,6 @@
 @echo off
-title Tunel Local para Telegram
+:inicio
+title Tunel Local para Telegram - REINICIO AUTOMATICO
 color 0E
 echo =========================================
 echo   Iniciando Tunel para Bot de Telegram
@@ -10,5 +11,8 @@ echo [*] Creando conexion segura...
 echo.
 npx localtunnel --port 3500 --subdomain recargas-ff-seguro-venezuela
 echo.
-echo =========================================
-pause
+echo [!] El tunel se ha cerrado de forma inesperada.
+echo [!] Reiniciando en 5 segundos... (Presiona Ctrl+C para salir)
+echo.
+timeout /t 5
+goto inicio

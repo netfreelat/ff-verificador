@@ -1,3 +1,17 @@
 node_modules/
 .env
+users.json
+orders.json
+settings.json
+pines.json
+recent_reloads.json
+wa_queue.json
+pagos.json
+.wwebjs_auth/
+.wwebjs_cache/
+*.json
+!package.json
+!package-lock.json
+*.sql
 *.log
+.DS_Store
